@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Models\Pengaturan;
 
 // ==========================================
 // LANDING PAGE & REDIRECT DASHBOARD
 // ==========================================
 Route::get('/', function () {
-    return view('welcome');
+    $pengaturan = Pengaturan::pluck('nilai', 'kunci')->toArray();
+    return view('welcome', compact('pengaturan'));
 });
 
 Route::get('/dashboard', function () {
@@ -24,8 +26,17 @@ Route::get('/dashboard', function () {
 // RUTE KHUSUS ADMIN
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // SUNTIKAN DATA DASHBOARD ADMIN
     Route::get('/dashboard', function () {
-        return view('admin.dashboard');
+        $stats = [
+            'peserta' => \App\Models\Peserta::count(),
+            'instruktur' => \App\Models\Instruktur::count(),
+            'kelas_berjalan' => \App\Models\Kelas::where('status_kelas', 'berjalan')->count(),
+            'menunggu_verifikasi' => \App\Models\Pendaftaran::where('status_pendaftaran', 'menunggu_verifikasi')->count(),
+        ];
+        $pendaftar_baru = \App\Models\Pendaftaran::with('peserta.user', 'kelas')->latest()->take(5)->get();
+        return view('admin.dashboard', compact('stats', 'pendaftar_baru'));
     })->name('dashboard');
 
     // Data Master (CRUD)
@@ -42,6 +53,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Fitur Laporan Terakhir
     Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/cetak', [\App\Http\Controllers\Admin\LaporanController::class, 'cetak'])->name('laporan.cetak');
+
+    // Fitur Pengaturan Landing Page
+    Route::get('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'index'])->name('pengaturan.index');
+    Route::put('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'update'])->name('pengaturan.update');
 });
 
 
@@ -49,8 +64,19 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 // RUTE KHUSUS INSTRUKTUR
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.')->group(function () {
+    
+    // SUNTIKAN DATA DASHBOARD INSTRUKTUR
     Route::get('/dashboard', function () {
-        return view('instruktur.dashboard');
+        $instruktur = auth()->user()->instruktur;
+        $stats = [
+            'kelas_saya' => $instruktur ? \App\Models\Kelas::where('instruktur_id', $instruktur->id)->count() : 0,
+            'kelas_aktif' => $instruktur ? \App\Models\Kelas::where('instruktur_id', $instruktur->id)->where('status_kelas', 'berjalan')->count() : 0,
+        ];
+        $jadwal = $instruktur ? \App\Models\Pertemuan::with('kelas')->whereHas('kelas', function($q) use ($instruktur) {
+            $q->where('instruktur_id', $instruktur->id)->where('status_kelas', 'berjalan');
+        })->whereDate('tanggal', '>=', today())->orderBy('tanggal', 'asc')->take(5)->get() : collect();
+        
+        return view('instruktur.dashboard', compact('stats', 'jadwal'));
     })->name('dashboard');
 
     // Fitur Jadwal & Penilaian
@@ -58,6 +84,7 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
     Route::get('/jadwal/{id}', [\App\Http\Controllers\Instruktur\JadwalController::class, 'show'])->name('jadwal.show');
     Route::put('/jadwal/{id}/nilai', [\App\Http\Controllers\Instruktur\JadwalController::class, 'simpanNilai'])->name('jadwal.simpan_nilai');
 
+    // Fitur Materi
     Route::get('/kelas/{kelas_id}/materi', [\App\Http\Controllers\Instruktur\MateriController::class, 'index'])->name('materi.index');
     Route::post('/kelas/{kelas_id}/materi', [\App\Http\Controllers\Instruktur\MateriController::class, 'store'])->name('materi.store');
     Route::delete('/materi/{id}', [\App\Http\Controllers\Instruktur\MateriController::class, 'destroy'])->name('materi.destroy');
@@ -74,15 +101,28 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
 // RUTE KHUSUS PESERTA
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->group(function () {
+    
+    // SUNTIKAN DATA DASHBOARD PESERTA (TIMELINE)
     Route::get('/dashboard', function () {
-        return view('peserta.dashboard');
+        $peserta = auth()->user()->peserta;
+        // Ambil kelas aktif yang sedang diikuti (Disetujui & Belum Selesai)
+        $kelasAktif = null;
+        if($peserta) {
+            $kelasAktif = \App\Models\Pendaftaran::with(['kelas.programPelatihan', 'kelas.pertemuan' => function($q){
+                $q->orderBy('tanggal', 'asc');
+            }])
+            ->where('peserta_id', $peserta->id)
+            ->where('status_pendaftaran', 'disetujui')
+            ->whereHas('kelas', function($q) {
+                $q->whereIn('status_kelas', ['menunggu', 'berjalan']);
+            })->first();
+        }
+        return view('peserta.dashboard', compact('peserta', 'kelasAktif'));
     })->name('dashboard');
-
 
     // Biodata
     Route::get('/biodata', [\App\Http\Controllers\Peserta\BiodataController::class, 'index'])->name('biodata.index');
     Route::put('/biodata', [\App\Http\Controllers\Peserta\BiodataController::class, 'update'])->name('biodata.update');
-
 
     // Fitur Pendaftaran
     Route::get('/pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'index'])->name('pendaftaran.index');
@@ -95,13 +135,11 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
     // Fitur Sertifikat
     Route::get('/sertifikat', [\App\Http\Controllers\Peserta\SertifikatController::class, 'index'])->name('sertifikat.index');
     Route::get('/sertifikat/{id}/cetak', [\App\Http\Controllers\Peserta\SertifikatController::class, 'cetak'])->name('sertifikat.cetak');
-
-
 });
 
 
 // ==========================================
-// RUTE PROFIL (BAWAAN BREEZE) -> INI YANG SEMPAT HILANG
+// RUTE PROFIL (BAWAAN BREEZE)
 // ==========================================
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

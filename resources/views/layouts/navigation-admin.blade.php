@@ -58,6 +58,11 @@
                         class="text-white hover:text-oranye focus:text-oranye {{ request()->routeIs('admin.laporan.*') ? 'border-oranye text-oranye' : 'border-transparent' }}">
                         {{ __('Laporan') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('admin.pengaturan.index')"
+                        :active="request()->routeIs('admin.pengaturan.*')"
+                        class="text-white hover:text-oranye focus:text-oranye {{ request()->routeIs('admin.pengaturan.*') ? 'border-oranye text-oranye' : 'border-transparent' }}">
+                        {{ __('Pengaturan Web') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -131,6 +136,9 @@
             <x-responsive-nav-link :href="route('admin.verifikasi.index')"
                 :active="request()->routeIs('admin.verifikasi.*')"
                 class="text-white hover:text-oranye">Verifikasi</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.pengaturan.index')"
+                :active="request()->routeIs('admin.pengaturan.*')" class="text-white hover:text-oranye">Pengaturan
+                Web</x-responsive-nav-link>
 
         </div>
     </div>
