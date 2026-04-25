@@ -1,0 +1,79 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Kelas;
+use App\Models\ProgramPelatihan;
+use App\Models\Instruktur;
+use Illuminate\Http\Request;
+
+class KelasController extends Controller
+{
+    public function index()
+    {
+        // Canggih: Mengambil data Kelas sekaligus memanggil relasi Program, Instruktur, dan nama User Instruktur (Eager Loading)
+        $kelas = Kelas::with(['programPelatihan', 'instruktur.user'])->latest()->get();
+        return view('admin.kelas.index', compact('kelas'));
+    }
+
+    public function create()
+    {
+        // Mengambil master data untuk dijadikan Dropdown Pilihan
+        $program = ProgramPelatihan::all();
+        $instruktur = Instruktur::with('user')->get();
+        return view('admin.kelas.create', compact('program', 'instruktur'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nama_kelas' => 'required|string|max:255',
+            'program_pelatihan_id' => 'required|exists:program_pelatihan,id',
+            'instruktur_id' => 'required|exists:instruktur,id',
+            'kuota_peserta' => 'required|integer|min:1',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai', // Canggih: Validasi tgl selesai harus setelah tgl mulai
+            'status_kelas' => 'required|in:menunggu,berjalan,selesai',
+        ]);
+
+        Kelas::create($request->all());
+
+        return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil dibuat!');
+    }
+
+    public function edit($id)
+    {
+        $kelas = Kelas::findOrFail($id);
+        $program = ProgramPelatihan::all();
+        $instruktur = Instruktur::with('user')->get();
+        
+        return view('admin.kelas.edit', compact('kelas', 'program', 'instruktur'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nama_kelas' => 'required|string|max:255',
+            'program_pelatihan_id' => 'required|exists:program_pelatihan,id',
+            'instruktur_id' => 'required|exists:instruktur,id',
+            'kuota_peserta' => 'required|integer|min:1',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'status_kelas' => 'required|in:menunggu,berjalan,selesai',
+        ]);
+
+        $kelas = Kelas::findOrFail($id);
+        $kelas->update($request->all());
+
+        return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil diperbarui!');
+    }
+
+    public function destroy($id)
+    {
+        $kelas = Kelas::findOrFail($id);
+        $kelas->delete();
+
+        return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil dihapus!');
+    }
+}
