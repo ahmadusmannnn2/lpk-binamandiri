@@ -31,9 +31,16 @@ class Kelas extends Model
         return $this->hasMany(Materi::class, 'kelas_id');
     }
 
+    // Relasi: Kelas ini punya banyak pertemuan
     public function pertemuan()
     {
         return $this->hasMany(Pertemuan::class, 'kelas_id');
     }
-    
+
+    // -- TAMBAHKAN INI --
+    // Relasi: Kelas ini memiliki banyak pendaftar (peserta)
+    public function pendaftaran()
+    {
+        return $this->hasMany(Pendaftaran::class, 'kelas_id');
+    }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Pengaturan;
+use Illuminate\Http\Request; // Tambahan untuk grafik filter
 
 // ==========================================
 // LANDING PAGE & REDIRECT DASHBOARD
@@ -12,12 +13,11 @@ Route::get('/', function () {
     return view('welcome', compact('pengaturan'));
 });
 
+// PENGARAH DASHBOARD AWAL
 Route::get('/dashboard', function () {
     $role = auth()->user()->role;
-    if ($role === 'admin')
-        return redirect()->route('admin.dashboard');
-    if ($role === 'instruktur')
-        return redirect()->route('instruktur.dashboard');
+    if ($role === 'admin') return redirect()->route('admin.dashboard');
+    if ($role === 'instruktur') return redirect()->route('instruktur.dashboard');
     return redirect()->route('peserta.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -27,8 +27,10 @@ Route::get('/dashboard', function () {
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
     
-    // SUNTIKAN DATA DASHBOARD ADMIN
-    Route::get('/dashboard', function () {
+    // DASHBOARD ADMIN (DENGAN SUNTIKAN DATA GRAFIK) - HANYA ADA 1 RUTE DASHBOARD DI SINI
+    Route::get('/dashboard', function (Request $request) {
+        $tahun = $request->input('tahun', date('Y'));
+
         $stats = [
             'peserta' => \App\Models\Peserta::count(),
             'instruktur' => \App\Models\Instruktur::count(),
@@ -36,7 +38,20 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
             'menunggu_verifikasi' => \App\Models\Pendaftaran::where('status_pendaftaran', 'menunggu_verifikasi')->count(),
         ];
         $pendaftar_baru = \App\Models\Pendaftaran::with('peserta.user', 'kelas')->latest()->take(5)->get();
-        return view('admin.dashboard', compact('stats', 'pendaftar_baru'));
+
+        $grafikBulan = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $grafikBulan[] = \App\Models\Pendaftaran::whereYear('tanggal_daftar', $tahun)->whereMonth('tanggal_daftar', $i)->count();
+        }
+
+        $kelasPopuler = \App\Models\Kelas::withCount(['pendaftaran' => function($q) use ($tahun) {
+            $q->whereYear('tanggal_daftar', $tahun);
+        }])->orderBy('pendaftaran_count', 'desc')->take(5)->get();
+
+        $labelKelas = $kelasPopuler->pluck('nama_kelas')->toArray();
+        $dataKelas = $kelasPopuler->pluck('pendaftaran_count')->toArray();
+
+        return view('admin.dashboard', compact('stats', 'pendaftar_baru', 'tahun', 'grafikBulan', 'labelKelas', 'dataKelas'));
     })->name('dashboard');
 
     // Data Master (CRUD)
@@ -50,11 +65,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/verifikasi/{id}', [\App\Http\Controllers\Admin\VerifikasiController::class, 'show'])->name('verifikasi.show');
     Route::put('/verifikasi/{id}', [\App\Http\Controllers\Admin\VerifikasiController::class, 'update'])->name('verifikasi.update');
 
-    // Fitur Laporan Terakhir
     Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/cetak', [\App\Http\Controllers\Admin\LaporanController::class, 'cetak'])->name('laporan.cetak');
 
-    // Fitur Pengaturan Landing Page
     Route::get('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'index'])->name('pengaturan.index');
     Route::put('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'update'])->name('pengaturan.update');
 });
@@ -65,7 +78,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.')->group(function () {
     
-    // SUNTIKAN DATA DASHBOARD INSTRUKTUR
+    // DASHBOARD INSTRUKTUR - HANYA ADA 1 RUTE DASHBOARD DI SINI
     Route::get('/dashboard', function () {
         $instruktur = auth()->user()->instruktur;
         $stats = [
@@ -79,17 +92,14 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
         return view('instruktur.dashboard', compact('stats', 'jadwal'));
     })->name('dashboard');
 
-    // Fitur Jadwal & Penilaian
     Route::get('/jadwal', [\App\Http\Controllers\Instruktur\JadwalController::class, 'index'])->name('jadwal.index');
     Route::get('/jadwal/{id}', [\App\Http\Controllers\Instruktur\JadwalController::class, 'show'])->name('jadwal.show');
     Route::put('/jadwal/{id}/nilai', [\App\Http\Controllers\Instruktur\JadwalController::class, 'simpanNilai'])->name('jadwal.simpan_nilai');
 
-    // Fitur Materi
     Route::get('/kelas/{kelas_id}/materi', [\App\Http\Controllers\Instruktur\MateriController::class, 'index'])->name('materi.index');
     Route::post('/kelas/{kelas_id}/materi', [\App\Http\Controllers\Instruktur\MateriController::class, 'store'])->name('materi.store');
     Route::delete('/materi/{id}', [\App\Http\Controllers\Instruktur\MateriController::class, 'destroy'])->name('materi.destroy');
 
-    // Fitur Pertemuan & Absensi Harian
     Route::post('/kelas/{kelas_id}/pertemuan', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'store'])->name('pertemuan.store');
     Route::get('/pertemuan/{id}', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'show'])->name('pertemuan.show');
     Route::put('/pertemuan/{id}/absensi', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'simpanAbsensi'])->name('pertemuan.absensi');
@@ -102,10 +112,9 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->group(function () {
     
-    // SUNTIKAN DATA DASHBOARD PESERTA (TIMELINE)
+    // DASHBOARD PESERTA - HANYA ADA 1 RUTE DASHBOARD DI SINI
     Route::get('/dashboard', function () {
         $peserta = auth()->user()->peserta;
-        // Ambil kelas aktif yang sedang diikuti (Disetujui & Belum Selesai)
         $kelasAktif = null;
         if($peserta) {
             $kelasAktif = \App\Models\Pendaftaran::with(['kelas.programPelatihan', 'kelas.pertemuan' => function($q){
@@ -120,19 +129,14 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
         return view('peserta.dashboard', compact('peserta', 'kelasAktif'));
     })->name('dashboard');
 
-    // Biodata
     Route::get('/biodata', [\App\Http\Controllers\Peserta\BiodataController::class, 'index'])->name('biodata.index');
     Route::put('/biodata', [\App\Http\Controllers\Peserta\BiodataController::class, 'update'])->name('biodata.update');
 
-    // Fitur Pendaftaran
     Route::get('/pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'index'])->name('pendaftaran.index');
     Route::get('/pendaftaran/{kelas_id}/daftar', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'create'])->name('pendaftaran.create');
     Route::post('/pendaftaran/{kelas_id}/store', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'store'])->name('pendaftaran.store');
 
-    // Fitur Materi
     Route::get('/materi', [\App\Http\Controllers\Peserta\MateriController::class, 'index'])->name('materi.index');
-
-    // Fitur Sertifikat
     Route::get('/sertifikat', [\App\Http\Controllers\Peserta\SertifikatController::class, 'index'])->name('sertifikat.index');
     Route::get('/sertifikat/{id}/cetak', [\App\Http\Controllers\Peserta\SertifikatController::class, 'cetak'])->name('sertifikat.cetak');
 });
