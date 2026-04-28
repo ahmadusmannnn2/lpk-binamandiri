@@ -5,32 +5,44 @@ namespace App\Http\Controllers\Peserta;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Pendaftaran;
+use App\Models\ProgramPelatihan; // Pastikan ini di-import
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PendaftaranController extends Controller
 {
+    // TAHAP 1: Menampilkan Daftar Program Pelatihan
     public function index()
     {
-        $peserta = Auth::user()->peserta;
+        // Ambil semua program pelatihan (bisa ditambahkan paginate jika datanya banyak)
+        $programs = ProgramPelatihan::all();
         
-        // Cekapakah biodata krusial masih kosong?
-        if (!$peserta->nik || !$peserta->pas_foto || !$peserta->nomor_telepon) {
-            // Lempar ke halaman biodata dengan pesan error
-            return redirect()->route('peserta.biodata.index')->with('error', 'PENTING: Anda wajib melengkapi Biodata Diri dan Pas Foto terlebih dahulu sebelum mendaftar kelas!');
+        // Cek status pendaftaran peserta (opsional, untuk notifikasi di atas form)
+        $peserta = Auth::user()->peserta;
+        $pendaftaranAktif = null;
+        if ($peserta) {
+            $pendaftaranAktif = Pendaftaran::where('peserta_id', $peserta->id)
+                ->whereIn('status_pendaftaran', ['menunggu_verifikasi', 'disetujui'])
+                ->first();
         }
 
-        // Ambil kelas yang statusnya 'menunggu' untuk bisa mendaftar
-        $kelasTersedia = Kelas::with(['programPelatihan', 'instruktur.user'])
-                            ->where('status_kelas', 'menunggu')
-                            ->latest()->get();
+        return view('peserta.pendaftaran.index', compact('programs', 'pendaftaranAktif'));
+    }
 
-        // Ambil riwayat pendaftaran peserta ini
-        $riwayatDaftar = Pendaftaran::with('kelas.programPelatihan')
-                            ->where('peserta_id', $peserta->id)
-                            ->latest()->get();
+    // TAHAP 2: Menampilkan Detail Program & Daftar Angkatan/Kelas
+    public function showProgram($program_id)
+    {
+        $program = ProgramPelatihan::findOrFail($program_id);
+        
+        // Perbaikan: Ubah program_id menjadi program_pelatihan_id
+        $kelas = Kelas::with('instruktur.user')
+                    ->where('program_pelatihan_id', $program_id) 
+                    ->where('status_kelas', 'menunggu') 
+                    ->get();
 
-        return view('peserta.pendaftaran.index', compact('kelasTersedia', 'riwayatDaftar'));
+        $peserta = Auth::user()->peserta;
+
+        return view('peserta.pendaftaran.show_program', compact('program', 'kelas', 'peserta'));
     }
 
     public function create($kelas_id)

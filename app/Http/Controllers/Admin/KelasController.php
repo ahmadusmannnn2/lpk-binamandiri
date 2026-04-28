@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\ProgramPelatihan;
 use App\Models\Instruktur;
+use App\Models\Pendaftaran; // <--- INI KUNCI PENYELESAIANNYA
 use Illuminate\Http\Request;
 
 class KelasController extends Controller
@@ -33,7 +34,7 @@ class KelasController extends Controller
             'instruktur_id' => 'required|exists:instruktur,id',
             'kuota_peserta' => 'required|integer|min:1',
             'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai', // Canggih: Validasi tgl selesai harus setelah tgl mulai
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'status_kelas' => 'required|in:menunggu,berjalan,selesai',
         ]);
 
@@ -75,5 +76,43 @@ class KelasController extends Controller
         $kelas->delete();
 
         return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil dihapus!');
+    }
+
+    public function show($id)
+    {
+        $kelas = Kelas::with(['programPelatihan', 'instruktur.user'])->findOrFail($id);
+        
+        $pendaftaran = Pendaftaran::with('peserta.user')
+            ->where('kelas_id', $id)
+            ->whereIn('status_pendaftaran', ['disetujui', 'selesai'])
+            ->get();
+
+        // Ambil daftar kelas lain (untuk opsi pemindahan peserta)
+        $kelasLain = Kelas::with('programPelatihan')
+            ->where('id', '!=', $id)
+            ->whereIn('status_kelas', ['menunggu', 'berjalan'])
+            ->get();
+
+        return view('admin.kelas.show', compact('kelas', 'pendaftaran', 'kelasLain'));
+    }
+
+    // Fitur Memindahkan Peserta ke Kelas Lain
+    public function pindahPeserta(Request $request, $kelas_id, $pendaftaran_id)
+    {
+        $request->validate([
+            'kelas_baru_id' => 'required|exists:kelas,id'
+        ]);
+
+        $pendaftaran = Pendaftaran::findOrFail($pendaftaran_id);
+        
+        // Pastikan pendaftaran ini memang dari kelas asalnya
+        if ($pendaftaran->kelas_id == $kelas_id) {
+            $pendaftaran->update([
+                'kelas_id' => $request->kelas_baru_id
+            ]);
+            return back()->with('success', 'Peserta berhasil dipindahkan ke kelas baru!');
+        }
+
+        return back()->with('error', 'Terjadi kesalahan validasi data pendaftaran.');
     }
 }

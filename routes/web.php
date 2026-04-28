@@ -67,7 +67,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::put('/peserta/{id}/reset-password', [\App\Http\Controllers\Admin\PesertaController::class, 'resetPassword'])->name('peserta.reset_password');
     
     Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
-
+    // Tambahan fitur pindah kelas
+    Route::post('/kelas/{kelas_id}/pindah-peserta/{pendaftaran_id}', [\App\Http\Controllers\Admin\KelasController::class, 'pindahPeserta'])->name('kelas.pindah_peserta');
+    
     // Fitur Utama
     Route::get('/verifikasi', [\App\Http\Controllers\Admin\VerifikasiController::class, 'index'])->name('verifikasi.index');
     Route::get('/verifikasi/{id}', [\App\Http\Controllers\Admin\VerifikasiController::class, 'show'])->name('verifikasi.show');
@@ -143,8 +145,10 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
     Route::get('/biodata', [\App\Http\Controllers\Peserta\BiodataController::class, 'index'])->name('biodata.index');
     Route::put('/biodata', [\App\Http\Controllers\Peserta\BiodataController::class, 'update'])->name('biodata.update');
 
-    Route::get('/pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'index'])->name('pendaftaran.index');
-    Route::get('/pendaftaran/{kelas_id}/daftar', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'create'])->name('pendaftaran.create');
+    // --- PENDAFTARAN 2 TAHAP ---
+    Route::get('/pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'index'])->name('pendaftaran.index'); // TAHAP 1: Pilih Program
+    Route::get('/pendaftaran/program/{program_id}', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'showProgram'])->name('pendaftaran.show_program'); // TAHAP 2: Pilih Angkatan/Kelas
+    Route::get('/pendaftaran/{kelas_id}/daftar', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'create'])->name('pendaftaran.create'); // TAHAP 3: Form Daftar
     Route::post('/pendaftaran/{kelas_id}/store', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'store'])->name('pendaftaran.store');
 
     Route::get('/materi', [\App\Http\Controllers\Peserta\MateriController::class, 'index'])->name('materi.index');

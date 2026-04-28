@@ -1,79 +1,51 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-xl text-hitam leading-tight">{{ __('Pendaftaran Pelatihan') }}</h2>
+        <h2 class="font-bold text-xl text-hitam leading-tight">
+            {{ __('Pilih Program Pelatihan') }}
+        </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+    <div class="py-12 bg-gray-50 min-h-screen">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            @if(session('success'))
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-sm"><p class="font-bold">Berhasil</p><p>{{ session('success') }}</p></div>
-            @endif
-            @if(session('error'))
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm"><p class="font-bold">Perhatian</p><p>{{ session('error') }}</p></div>
-            @endif
-
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg border-t-4 border-oranye">
-                <div class="p-6">
-                    <h3 class="font-bold text-lg mb-4 text-hitam border-b pb-2">Kelas yang Tersedia</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        @forelse($kelasTersedia as $kelas)
-                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition">
-                                <h4 class="font-bold text-lg text-oranye">{{ $kelas->nama_kelas }}</h4>
-                                <p class="text-sm font-semibold text-hitam">{{ $kelas->programPelatihan->nama_program }}</p>
-                                <div class="mt-4 text-sm text-gray-600 space-y-1">
-                                    <p><strong>Instruktur:</strong> {{ $kelas->instruktur->user->name }}</p>
-                                    <p><strong>Kuota:</strong> {{ $kelas->kuota_peserta }} Orang</p>
-                                    <p><strong>Harga:</strong> Rp {{ number_format($kelas->programPelatihan->harga_pelatihan, 0, ',', '.') }}</p>
-                                    <p><strong>Jadwal:</strong> {{ \Carbon\Carbon::parse($kelas->tanggal_mulai)->format('d M') }} - {{ \Carbon\Carbon::parse($kelas->tanggal_selesai)->format('d M Y') }}</p>
-                                </div>
-                                <div class="mt-6">
-                                    <a href="{{ route('peserta.pendaftaran.create', $kelas->id) }}" class="block text-center bg-hitam text-white px-4 py-2 rounded hover:bg-oranye transition w-full">Daftar Sekarang</a>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="col-span-3 text-center text-gray-500 py-4">Belum ada kelas baru yang dibuka.</div>
-                        @endforelse
+            @if($pendaftaranAktif)
+                <div class="mb-8 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm flex items-start gap-3">
+                    <svg class="w-6 h-6 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div>
+                        <h4 class="font-bold text-blue-800">Informasi Pendaftaran</h4>
+                        <p class="text-sm text-blue-700 mt-1">Anda saat ini sudah memiliki pendaftaran yang berstatus <strong>{{ str_replace('_', ' ', strtoupper($pendaftaranAktif->status_pendaftaran)) }}</strong> pada kelas <strong>{{ $pendaftaranAktif->kelas->nama_kelas ?? 'Tidak diketahui' }}</strong>. Anda tetap bisa melihat-lihat program lain, namun disarankan menyelesaikan program saat ini terlebih dahulu.</p>
                     </div>
                 </div>
+            @endif
+
+            <div class="text-center mb-10">
+                <h3 class="text-3xl font-black text-hitam">Program <span class="text-oranye">Unggulan</span> Kami</h3>
+                <p class="text-gray-500 mt-2">Pilih program pelatihan yang sesuai dengan minat dan karir Anda ke depan.</p>
             </div>
 
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg border-t-4 border-hitam">
-                <div class="p-6">
-                    <h3 class="font-bold text-lg mb-4 text-hitam border-b pb-2">Riwayat Pendaftaran Anda</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-gray-100 text-hitam uppercase text-sm">
-                                    <th class="py-3 px-6">Tanggal Daftar</th>
-                                    <th class="py-3 px-6">Kelas & Program</th>
-                                    <th class="py-3 px-6 text-center">Status</th>
-                                    <th class="py-3 px-6">Catatan Admin</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-600 text-sm">
-                                @forelse($riwayatDaftar as $riwayat)
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="py-3 px-6">{{ \Carbon\Carbon::parse($riwayat->tanggal_daftar)->format('d M Y') }}</td>
-                                    <td class="py-3 px-6 font-bold">{{ $riwayat->kelas->nama_kelas }}<br><span class="text-xs font-normal text-oranye">{{ $riwayat->kelas->programPelatihan->nama_program }}</span></td>
-                                    <td class="py-3 px-6 text-center">
-                                        @if($riwayat->status_pendaftaran == 'menunggu_verifikasi')
-                                            <span class="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-xs font-bold">Menunggu Verifikasi</span>
-                                        @elseif($riwayat->status_pendaftaran == 'disetujui')
-                                            <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-bold">Disetujui</span>
-                                        @else
-                                            <span class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs font-bold">Ditolak</span>
-                                        @endif
-                                    </td>
-                                    <td class="py-3 px-6 text-xs text-red-500">{{ $riwayat->keterangan_admin ?? '-' }}</td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="4" class="py-6 text-center text-gray-400">Anda belum mendaftar di kelas manapun.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @forelse($programs as $program)
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-2xl hover:border-oranye/50 transition duration-300 flex flex-col">
+                        <div class="h-32 bg-hitam relative overflow-hidden flex items-center justify-center">
+                            <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                            <svg class="w-16 h-16 text-oranye/50 group-hover:scale-110 transition duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        </div>
+                        
+                        <div class="p-6 flex flex-col flex-1">
+                            <h4 class="text-xl font-bold text-hitam mb-2 group-hover:text-oranye transition">{{ $program->nama_program }}</h4>
+                            <p class="text-sm text-gray-500 line-clamp-3 mb-6 flex-1">{{ $program->deskripsi ?? 'Tidak ada deskripsi untuk program ini.' }}</p>
+                            
+                            <a href="{{ route('peserta.pendaftaran.show_program', $program->id) }}" class="block w-full text-center bg-gray-50 hover:bg-oranye text-gray-700 hover:text-white font-bold py-3 px-4 rounded-xl border border-gray-200 hover:border-oranye transition duration-300">
+                                Lihat Pilihan Kelas
+                            </a>
+                        </div>
                     </div>
-                </div>
+                @empty
+                    <div class="col-span-full py-16 text-center bg-white rounded-2xl shadow-sm border border-gray-200">
+                        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        <h3 class="text-xl font-bold text-gray-400">Belum ada program pelatihan yang tersedia.</h3>
+                    </div>
+                @endforelse
             </div>
 
         </div>
