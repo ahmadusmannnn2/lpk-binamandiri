@@ -57,11 +57,24 @@
         class="fixed w-full z-50 transition-all duration-300 bg-hitam/95 backdrop-blur-md border-b border-white/10 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
-                <div
-                    class="flex-shrink-0 flex items-center gap-2 cursor-pointer hover:scale-105 transition transform duration-300">
-                    <span class="font-black text-2xl tracking-widest text-white">BINA<span
-                            class="text-oranye">MANDIRI</span></span>
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
+                    @php
+                        $logoNavbar = \App\Models\Pengaturan::where('kunci', 'logo_navbar')->value('nilai');
+                        $namaLpk1 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_1')->value('nilai') ?? 'LPK';
+                        $namaLpk2 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_2')->value('nilai') ?? 'BINA';
+                    @endphp
+
+                    @if($logoNavbar)
+                        <img src="{{ asset('storage/' . $logoNavbar) }}" alt="Logo"
+                            class="h-10 w-auto group-hover:scale-105 transition transform duration-300">
+                    @endif
+
+                    <span
+                        class="font-black text-2xl tracking-widest text-white group-hover:text-oranye transition duration-300 {{ $logoNavbar ? 'hidden sm:block' : '' }}">
+                        {{ $namaLpk1 }}<span class="text-oranye">{{ $namaLpk2 }}</span>
+                    </span>
                 </div>
+
                 <div class="hidden md:flex space-x-8">
                     <a href="#tentang"
                         class="text-gray-300 hover:text-oranye font-semibold transition duration-300 text-sm tracking-widest uppercase">Tentang
@@ -103,10 +116,12 @@
                 class="inline-block px-4 py-1.5 rounded-full bg-oranye/20 border border-oranye/30 text-oranye font-bold text-sm tracking-widest uppercase mb-6 animate-fade-in-up">
                 Indonesian Welding Training Centre
             </div>
-            <h1 class="text-5xl md:text-7xl font-black text-white leading-tight mb-6 animate-fade-in-up delay-1 tracking-tight">
+            <h1
+                class="text-5xl md:text-7xl font-black text-white leading-tight mb-6 animate-fade-in-up delay-1 tracking-tight">
                 {{ $pengaturan['hero_judul'] ?? 'Creating Value For The World.' }}
             </h1>
-            <p class="mt-4 text-xl text-gray-400 max-w-3xl mx-auto mb-10 animate-fade-in-up delay-2 leading-relaxed whitespace-pre-line">
+            <p
+                class="mt-4 text-xl text-gray-400 max-w-3xl mx-auto mb-10 animate-fade-in-up delay-2 leading-relaxed whitespace-pre-line">
                 {{ $pengaturan['hero_deskripsi'] ?? 'Mewujudkan visi Anda menjadi sumber daya Welder Profesional dunia dengan standar teknologi pengelasan internasional.' }}
             </p>
             <div class="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in-up delay-3">
@@ -151,7 +166,7 @@
                     <h2 class="text-oranye font-bold tracking-widest uppercase mb-2">Introduction</h2>
                     <h3 class="text-4xl font-black text-hitam mb-6 leading-tight">Mencetak SDM Unggul & Siap Bersaing
                         Global</h3>
-                    
+
                     <div class="text-gray-600 mb-6 text-lg leading-relaxed text-justify whitespace-pre-line">
                         {{ $pengaturan['tentang_deskripsi'] ?? 'BINA MANDIRI adalah lembaga pelatihan yang beroperasi di sektor pengelasan, kelistrikan, dan pengecatan. Berlokasi di Jlamprang, Wonosobo, lembaga ini dipimpin langsung oleh Bapak Doni Khojin.' }}
                     </div>
@@ -367,7 +382,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <span class="whitespace-pre-line">{{ $pengaturan['kontak_alamat'] ?? "Jl. Karya Tralis No. 58 RT 04/RW 03\nJlamprang, Wonosobo, Central Java" }}</span>
+                        <span
+                            class="whitespace-pre-line">{{ $pengaturan['kontak_alamat'] ?? "Jl. Karya Tralis No. 58 RT 04/RW 03\nJlamprang, Wonosobo, Central Java" }}</span>
                     </li>
                     <li class="flex items-center">
                         <svg class="w-5 h-5 text-oranye mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

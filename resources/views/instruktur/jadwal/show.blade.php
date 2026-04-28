@@ -12,14 +12,19 @@
                 </div>
             @endif
 
-            <div class="bg-hitam text-white rounded-t-lg p-6 flex flex-col md:flex-row justify-between items-center border-b-4 border-oranye">
+            <div class="bg-hitam text-white rounded-t-lg p-6 flex flex-col md:flex-row justify-between items-center border-b-4 border-oranye relative">
                 <div>
                     <h3 class="text-2xl font-bold">{{ $kelas->nama_kelas }}</h3>
                     <p class="text-oranye font-semibold">{{ $kelas->programPelatihan->nama_program }}</p>
                 </div>
-                <div class="text-right mt-4 md:mt-0 text-sm opacity-80">
+                <div class="text-right mt-4 md:mt-0 text-sm opacity-80 flex flex-col items-end">
                     <p>Periode: {{ \Carbon\Carbon::parse($kelas->tanggal_mulai)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($kelas->tanggal_selesai)->format('d M Y') }}</p>
-                    <p>Status Kelas: <span class="uppercase font-bold">{{ $kelas->status_kelas }}</span></p>
+                    <p class="mb-3">Status Kelas: <span class="uppercase font-bold text-oranye">{{ $kelas->status_kelas }}</span></p>
+                    
+                    <a href="{{ route('instruktur.jadwal.cetak', $kelas->id) }}" target="_blank" class="bg-oranye hover:bg-[#c24b22] text-white px-4 py-2 rounded shadow transition flex items-center gap-2 font-bold text-xs uppercase tracking-widest">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Cetak Daftar Hadir & Nilai
+                    </a>
                 </div>
             </div>
 

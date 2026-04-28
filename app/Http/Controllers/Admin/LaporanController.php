@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LaporanExport;
 
 class LaporanController extends Controller
 {
@@ -51,5 +53,10 @@ class LaporanController extends Controller
         $namaKelasFilter = $request->filled('kelas_id') ? Kelas::find($request->kelas_id)->nama_kelas : 'Semua Kelas';
 
         return view('admin.laporan.cetak', compact('laporan', 'namaKelasFilter'));
+    }
+    // Mengekspor ke format Excel
+    public function excel(Request $request)
+    {
+        return Excel::download(new LaporanExport($request->kelas_id, $request->status_kelulusan), 'Laporan_Data_Peserta_LPK_Bina_Mandiri.xlsx');
     }
 }

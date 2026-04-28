@@ -16,8 +16,10 @@ Route::get('/', function () {
 // PENGARAH DASHBOARD AWAL
 Route::get('/dashboard', function () {
     $role = auth()->user()->role;
-    if ($role === 'admin') return redirect()->route('admin.dashboard');
-    if ($role === 'instruktur') return redirect()->route('instruktur.dashboard');
+    if ($role === 'admin')
+        return redirect()->route('admin.dashboard');
+    if ($role === 'instruktur')
+        return redirect()->route('instruktur.dashboard');
     return redirect()->route('peserta.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -26,8 +28,8 @@ Route::get('/dashboard', function () {
 // RUTE KHUSUS ADMIN
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // DASHBOARD ADMIN (DENGAN SUNTIKAN DATA GRAFIK) - HANYA ADA 1 RUTE DASHBOARD DI SINI
+
+    // DASHBOARD ADMIN (DENGAN SUNTIKAN DATA GRAFIK)
     Route::get('/dashboard', function (Request $request) {
         $tahun = $request->input('tahun', date('Y'));
 
@@ -44,9 +46,11 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
             $grafikBulan[] = \App\Models\Pendaftaran::whereYear('tanggal_daftar', $tahun)->whereMonth('tanggal_daftar', $i)->count();
         }
 
-        $kelasPopuler = \App\Models\Kelas::withCount(['pendaftaran' => function($q) use ($tahun) {
-            $q->whereYear('tanggal_daftar', $tahun);
-        }])->orderBy('pendaftaran_count', 'desc')->take(5)->get();
+        $kelasPopuler = \App\Models\Kelas::withCount([
+            'pendaftaran' => function ($q) use ($tahun) {
+                $q->whereYear('tanggal_daftar', $tahun);
+            }
+        ])->orderBy('pendaftaran_count', 'desc')->take(5)->get();
 
         $labelKelas = $kelasPopuler->pluck('nama_kelas')->toArray();
         $dataKelas = $kelasPopuler->pluck('pendaftaran_count')->toArray();
@@ -57,7 +61,11 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Data Master (CRUD)
     Route::resource('program', \App\Http\Controllers\Admin\ProgramPelatihanController::class);
     Route::resource('instruktur', \App\Http\Controllers\Admin\InstrukturController::class);
+    
+    // --- DI SINI LETAK RUTE PESERTA & RESET PASSWORD YANG BENAR ---
     Route::resource('peserta', \App\Http\Controllers\Admin\PesertaController::class);
+    Route::put('/peserta/{id}/reset-password', [\App\Http\Controllers\Admin\PesertaController::class, 'resetPassword'])->name('peserta.reset_password');
+    
     Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
 
     // Fitur Utama
@@ -67,6 +75,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/cetak', [\App\Http\Controllers\Admin\LaporanController::class, 'cetak'])->name('laporan.cetak');
+    Route::get('/laporan/excel', [\App\Http\Controllers\Admin\LaporanController::class, 'excel'])->name('laporan.excel'); 
 
     Route::get('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'index'])->name('pengaturan.index');
     Route::put('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'update'])->name('pengaturan.update');
@@ -77,24 +86,24 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 // RUTE KHUSUS INSTRUKTUR
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.')->group(function () {
-    
-    // DASHBOARD INSTRUKTUR - HANYA ADA 1 RUTE DASHBOARD DI SINI
+
     Route::get('/dashboard', function () {
         $instruktur = auth()->user()->instruktur;
         $stats = [
             'kelas_saya' => $instruktur ? \App\Models\Kelas::where('instruktur_id', $instruktur->id)->count() : 0,
             'kelas_aktif' => $instruktur ? \App\Models\Kelas::where('instruktur_id', $instruktur->id)->where('status_kelas', 'berjalan')->count() : 0,
         ];
-        $jadwal = $instruktur ? \App\Models\Pertemuan::with('kelas')->whereHas('kelas', function($q) use ($instruktur) {
+        $jadwal = $instruktur ? \App\Models\Pertemuan::with('kelas')->whereHas('kelas', function ($q) use ($instruktur) {
             $q->where('instruktur_id', $instruktur->id)->where('status_kelas', 'berjalan');
         })->whereDate('tanggal', '>=', today())->orderBy('tanggal', 'asc')->take(5)->get() : collect();
-        
+
         return view('instruktur.dashboard', compact('stats', 'jadwal'));
     })->name('dashboard');
 
     Route::get('/jadwal', [\App\Http\Controllers\Instruktur\JadwalController::class, 'index'])->name('jadwal.index');
     Route::get('/jadwal/{id}', [\App\Http\Controllers\Instruktur\JadwalController::class, 'show'])->name('jadwal.show');
     Route::put('/jadwal/{id}/nilai', [\App\Http\Controllers\Instruktur\JadwalController::class, 'simpanNilai'])->name('jadwal.simpan_nilai');
+    Route::get('/jadwal/{id}/cetak', [\App\Http\Controllers\Instruktur\JadwalController::class, 'cetak'])->name('jadwal.cetak'); 
 
     Route::get('/kelas/{kelas_id}/materi', [\App\Http\Controllers\Instruktur\MateriController::class, 'index'])->name('materi.index');
     Route::post('/kelas/{kelas_id}/materi', [\App\Http\Controllers\Instruktur\MateriController::class, 'store'])->name('materi.store');
@@ -111,20 +120,22 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
 // RUTE KHUSUS PESERTA
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->group(function () {
-    
-    // DASHBOARD PESERTA - HANYA ADA 1 RUTE DASHBOARD DI SINI
+
     Route::get('/dashboard', function () {
         $peserta = auth()->user()->peserta;
         $kelasAktif = null;
-        if($peserta) {
-            $kelasAktif = \App\Models\Pendaftaran::with(['kelas.programPelatihan', 'kelas.pertemuan' => function($q){
-                $q->orderBy('tanggal', 'asc');
-            }])
-            ->where('peserta_id', $peserta->id)
-            ->where('status_pendaftaran', 'disetujui')
-            ->whereHas('kelas', function($q) {
-                $q->whereIn('status_kelas', ['menunggu', 'berjalan']);
-            })->first();
+        if ($peserta) {
+            $kelasAktif = \App\Models\Pendaftaran::with([
+                'kelas.programPelatihan',
+                'kelas.pertemuan' => function ($q) {
+                    $q->orderBy('tanggal', 'asc');
+                }
+            ])
+                ->where('peserta_id', $peserta->id)
+                ->where('status_pendaftaran', 'disetujui')
+                ->whereHas('kelas', function ($q) {
+                    $q->whereIn('status_kelas', ['menunggu', 'berjalan']);
+                })->first();
         }
         return view('peserta.dashboard', compact('peserta', 'kelasAktif'));
     })->name('dashboard');

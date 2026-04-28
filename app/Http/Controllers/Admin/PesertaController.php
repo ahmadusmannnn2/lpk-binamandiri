@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules;
 
+
 class PesertaController extends Controller
 {
     public function index()
@@ -138,5 +139,19 @@ class PesertaController extends Controller
         User::destroy($user_id);
 
         return redirect()->route('admin.peserta.index')->with('success', 'Peserta dan akunnya berhasil dihapus!');
+    }
+
+    // Fitur Reset Password Peserta
+    public function resetPassword($id)
+    {
+        $peserta = Peserta::findOrFail($id);
+        $user = $peserta->user;
+
+        // Ubah password kembali ke default '11111111'
+        $user->update([
+            'password' => Hash::make('11111111')
+        ]);
+
+        return back()->with('success', 'Password peserta atas nama ' . $user->name . ' berhasil direset menjadi: 11111111');
     }
 }
