@@ -3,15 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // Tambahkan ini untuk fitur Hapus Aman
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute; // Wajib dipanggil untuk fitur penerjemah otomatis
 
 class ProgramPelatihan extends Model
 {
-    use SoftDeletes; // Aktifkan fitur Hapus Aman
+    use SoftDeletes;
 
-    // 1. Beritahu Laravel nama tabel yang benar secara spesifik
     protected $table = 'program_pelatihan';
-
-    // 2. Izinkan pengisian data massal (kecuali ID)
     protected $guarded = ['id'];
+
+    // MESIN PINTAR: Mengubah input "1F, 2F, 3F" menjadi Array JSON secara otomatis saat disimpan
+    protected function parameterPenilaian(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => json_decode($value, true) ?? [],
+            set: fn ($value) => is_string($value) 
+                ? json_encode(array_values(array_filter(array_map('trim', explode(',', $value))))) 
+                : json_encode($value ?? []),
+        );
+    }
 }

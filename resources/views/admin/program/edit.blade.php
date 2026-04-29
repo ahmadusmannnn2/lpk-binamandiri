@@ -5,9 +5,9 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg border-t-4 border-oranye">
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-2xl border-t-4 border-oranye">
                 <div class="p-8 text-gray-900">
                     <form action="{{ route('admin.program.update', $program->id) }}" method="POST" class="space-y-6">
                         @csrf
@@ -15,25 +15,32 @@
                         
                         <div>
                             <x-input-label for="nama_program" :value="__('Nama Program Pelatihan')" class="text-hitam font-bold" />
-                            <x-text-input id="nama_program" class="block mt-1 w-full focus:border-oranye focus:ring-oranye" type="text" name="nama_program" value="{{ old('nama_program', $program->nama_program) }}" required autofocus />
+                            <x-text-input id="nama_program" class="block mt-1 w-full focus:border-oranye focus:ring-oranye rounded-xl" type="text" name="nama_program" value="{{ old('nama_program', $program->nama_program) }}" required autofocus />
                             <x-input-error :messages="$errors->get('nama_program')" class="mt-2" />
                         </div>
 
                         <div>
                             <x-input-label for="harga_pelatihan" :value="__('Harga Pelatihan (Rp)')" class="text-hitam font-bold" />
-                            <x-text-input id="harga_pelatihan" class="block mt-1 w-full focus:border-oranye focus:ring-oranye" type="number" name="harga_pelatihan" value="{{ old('harga_pelatihan', $program->harga_pelatihan) }}" required />
+                            <x-text-input id="harga_pelatihan" class="block mt-1 w-full focus:border-oranye focus:ring-oranye rounded-xl" type="number" name="harga_pelatihan" value="{{ old('harga_pelatihan', $program->harga_pelatihan) }}" required />
                             <x-input-error :messages="$errors->get('harga_pelatihan')" class="mt-2" />
+                        </div>
+
+                        <div class="bg-orange-50 p-5 rounded-xl border border-orange-100">
+                            <x-input-label for="parameter_penilaian" :value="__('Parameter Penilaian (Pisahkan dengan koma)')" class="text-oranye font-black" />
+                            <x-text-input id="parameter_penilaian" class="block mt-2 w-full focus:border-oranye focus:ring-oranye rounded-xl border-orange-200" type="text" name="parameter_penilaian" value="{{ old('parameter_penilaian', is_array($program->parameter_penilaian) ? implode(', ', $program->parameter_penilaian) : '') }}" placeholder="Contoh: 1F, 2F, 3F, 1G, Teori Bahasa" required />
+                            <p class="text-xs text-gray-600 mt-2">Ketik kriteria yang akan dinilai oleh instruktur nanti, <strong>wajib dipisahkan dengan tanda koma ( , )</strong>.</p>
+                            <x-input-error :messages="$errors->get('parameter_penilaian')" class="mt-2" />
                         </div>
 
                         <div>
                             <x-input-label for="deskripsi" :value="__('Deskripsi Program')" class="text-hitam font-bold" />
-                            <textarea id="deskripsi" name="deskripsi" rows="4" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-oranye focus:ring-oranye">{{ old('deskripsi', $program->deskripsi) }}</textarea>
+                            <textarea id="deskripsi" name="deskripsi" rows="4" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-oranye focus:ring-oranye">{{ old('deskripsi', $program->deskripsi) }}</textarea>
                             <x-input-error :messages="$errors->get('deskripsi')" class="mt-2" />
                         </div>
 
-                        <div class="flex items-center justify-end mt-6 space-x-4">
-                            <a href="{{ route('admin.program.index') }}" class="text-gray-500 hover:text-hitam font-semibold transition">Batal</a>
-                            <button type="submit" class="bg-hitam text-white px-6 py-2 rounded-lg hover:bg-oranye transition duration-300 transform hover:-translate-y-1 shadow-lg">
+                        <div class="flex items-center justify-end mt-8 pt-6 border-t border-gray-100 space-x-4">
+                            <a href="{{ route('admin.program.index') }}" class="text-gray-500 hover:text-hitam font-bold transition">Batal</a>
+                            <button type="submit" class="bg-hitam text-white px-8 py-3 rounded-xl hover:bg-oranye transition duration-300 transform hover:-translate-y-1 shadow-lg font-bold">
                                 Perbarui Program
                             </button>
                         </div>

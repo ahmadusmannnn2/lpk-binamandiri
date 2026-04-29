@@ -5,13 +5,13 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
             <h2 class="font-bold text-xl text-hitam leading-tight">
-                {{ __('Isi Presensi & Nilai Harian') }}
+                {{ __('Isi Presensi Harian') }}
             </h2>
         </div>
     </x-slot>
 
     <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             
             @if(session('success'))
                 <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm flex items-center">
@@ -22,17 +22,17 @@
 
             <div class="bg-hitam rounded-xl shadow-lg p-6 mb-6 text-white grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="md:col-span-2">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Materi / Topik Pembahasan</p>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Topik Pembahasan</p>
                     <p class="font-black text-2xl text-oranye">{{ $pertemuan->judul_pertemuan }}</p>
                     <p class="text-sm mt-1 text-gray-300">{{ $pertemuan->kelas->nama_kelas }} ({{ $pertemuan->kelas->programPelatihan->nama_program }})</p>
                 </div>
                 <div class="text-left md:text-right flex flex-col justify-center">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Tanggal Pertemuan</p>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Tanggal</p>
                     <p class="font-bold text-xl">{{ \Carbon\Carbon::parse($pertemuan->tanggal)->translatedFormat('d F Y') }}</p>
                     @if($pertemuan->file_materi)
                         <a href="{{ asset('storage/' . $pertemuan->file_materi) }}" target="_blank" class="inline-flex items-center gap-1 text-xs bg-blue-500 hover:bg-blue-400 text-white px-3 py-1 rounded-full mt-2 w-fit md:ml-auto transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            Lihat Modul
+                            Modul Terlampir
                         </a>
                     @endif
                 </div>
@@ -48,10 +48,8 @@
                             <table class="min-w-full w-full text-left border-collapse">
                                 <thead>
                                     <tr class="bg-gray-50 text-hitam uppercase text-xs font-black tracking-wider border-b-2 border-gray-200">
-                                        <th class="py-3 px-4">Nama Peserta</th>
-                                        <th class="py-3 px-4 text-center">Status Kehadiran</th>
-                                        <th class="py-3 px-4 text-center">Nilai Harian</th>
-                                        <th class="py-3 px-4">Catatan / Evaluasi (Opsional)</th>
+                                        <th class="py-3 px-4 w-1/2">Nama Peserta</th>
+                                        <th class="py-3 px-4 text-center w-1/2">Status Kehadiran</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-gray-600 text-sm">
@@ -59,7 +57,7 @@
                                     <tr class="border-b border-gray-100 hover:bg-orange-50/30 transition duration-200">
                                         <td class="py-4 px-4">
                                             <div class="font-bold text-hitam">{{ $absen->pendaftaran->peserta->user->name }}</div>
-                                            <div class="text-xs text-gray-500">{{ $absen->pendaftaran->peserta->nomor_telepon }}</div>
+                                            <div class="text-xs text-gray-500">NIK: {{ $absen->pendaftaran->peserta->nik }}</div>
                                         </td>
                                         
                                         <td class="py-4 px-4">
@@ -82,14 +80,6 @@
                                                 </label>
                                             </div>
                                         </td>
-                                        
-                                        <td class="py-4 px-4 text-center">
-                                            <input type="number" name="absensi[{{ $absen->id }}][nilai]" value="{{ $absen->nilai }}" min="0" max="100" class="w-20 text-center border-gray-300 rounded-md shadow-sm focus:border-oranye focus:ring-oranye font-bold text-hitam" placeholder="0-100">
-                                        </td>
-                                        
-                                        <td class="py-4 px-4">
-                                            <textarea name="absensi[{{ $absen->id }}][catatan]" rows="1" class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-oranye focus:ring-oranye" placeholder="Ketikan catatan progres...">{{ $absen->catatan }}</textarea>
-                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -98,8 +88,8 @@
 
                         <div class="mt-8 flex justify-end pt-6 border-t border-gray-200">
                             <button type="submit" class="bg-hitam hover:bg-gray-800 text-white px-10 py-3 rounded-xl shadow-lg font-bold transition transform hover:-translate-y-1 flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                                Simpan Data Harian
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Simpan Kehadiran
                             </button>
                         </div>
                     </form>

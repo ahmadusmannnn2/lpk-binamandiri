@@ -6,7 +6,8 @@
     <title>Daftar Hadir & Nilai - {{ $kelas?->nama_kelas ?? 'Kelas' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @page { size: A4 portrait; margin: 20mm; }
+        /* Kita ubah ke landscape agar muat jika parameter nilainya banyak */
+        @page { size: A4 landscape; margin: 15mm; }
         @media print {
             .no-print { display: none !important; }
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -40,15 +41,28 @@
         </table>
     </div>
 
+    @php
+        // Tarik parameter dinamis dari program pelatihan
+        $parameters = $kelas?->programPelatihan?->parameter_penilaian ?? [];
+    @endphp
+
     <table class="w-full border-collapse border border-gray-800 text-left text-xs mb-8">
         <thead class="bg-gray-200">
             <tr>
                 <th class="border border-gray-800 py-2 px-2 text-center w-8">No</th>
                 <th class="border border-gray-800 py-2 px-2">Nama Peserta</th>
                 <th class="border border-gray-800 py-2 px-2 text-center">NIK</th>
-                <th class="border border-gray-800 py-2 px-2 text-center">Kehadiran</th>
-                <th class="border border-gray-800 py-2 px-2 text-center">N. Teori</th>
-                <th class="border border-gray-800 py-2 px-2 text-center">N. Praktik</th>
+                <th class="border border-gray-800 py-2 px-2 text-center">Hadir</th>
+                
+                @if(empty($parameters))
+                    <th class="border border-gray-800 py-2 px-2 text-center text-red-500">Kriteria Belum Diatur</th>
+                @else
+                    @foreach($parameters as $param)
+                        <th class="border border-gray-800 py-2 px-2 text-center">{{ $param }}</th>
+                    @endforeach
+                @endif
+                
+                <th class="border border-gray-800 py-2 px-2 text-center font-bold">Rata-rata</th>
                 <th class="border border-gray-800 py-2 px-2 text-center">Status</th>
             </tr>
         </thead>
@@ -56,12 +70,24 @@
             @forelse($pesertaKelas as $key => $item)
             <tr>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $key + 1 }}</td>
-                
                 <td class="border border-gray-800 py-2 px-2 font-bold">{{ $item->peserta?->user?->name ?? 'Peserta Terhapus' }}</td>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->peserta?->nik ?? '-' }}</td>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->kehadiran ?? 0 }}%</td>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_teori ?? 0 }}</td>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_praktik ?? 0 }}</td>
+                
+                @if(empty($parameters))
+                    <td class="border border-gray-800 py-2 px-2 text-center">-</td>
+                @else
+                    @foreach($parameters as $param)
+                        @php
+                            $oldData = $item->detail_nilai[$param] ?? null;
+                            $skor = is_array($oldData) ? ($oldData['skor'] ?? '-') : (is_numeric($oldData) ? $oldData : '-');
+                        @endphp
+                        <td class="border border-gray-800 py-2 px-2 text-center">{{ $skor }}</td>
+                    @endforeach
+                @endif
+                
+                <td class="border border-gray-800 py-2 px-2 text-center font-black">{{ $item->nilai_rata_rata ?? 0 }}</td>
+                
                 <td class="border border-gray-800 py-2 px-2 text-center font-bold uppercase">
                     @if($item->status_kelulusan == 'lulus')
                         <span class="text-green-700">Lulus</span>
@@ -74,7 +100,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="border border-gray-800 py-4 px-2 text-center italic">Tidak ada peserta di kelas ini.</td>
+                <td colspan="{{ count($parameters) + 6 }}" class="border border-gray-800 py-4 px-2 text-center italic">Tidak ada peserta di kelas ini.</td>
             </tr>
             @endforelse
         </tbody>
