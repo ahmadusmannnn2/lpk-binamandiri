@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Hadir & Nilai - {{ $kelas->nama_kelas }}</title>
+    <title>Daftar Hadir & Nilai - {{ $kelas?->nama_kelas ?? 'Kelas' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @page { size: A4 portrait; margin: 20mm; }
@@ -33,10 +33,10 @@
     <div class="text-center mb-8">
         <h2 class="text-xl font-bold uppercase underline mb-4">Daftar Hadir & Rekap Nilai Akhir Peserta</h2>
         <table class="w-full text-left max-w-lg mx-auto text-sm">
-            <tr><td class="font-bold w-32">Program</td><td class="w-4">:</td><td>{{ $kelas->programPelatihan->nama_program }}</td></tr>
-            <tr><td class="font-bold">Kelas</td><td>:</td><td>{{ $kelas->nama_kelas }}</td></tr>
-            <tr><td class="font-bold">Periode</td><td>:</td><td>{{ \Carbon\Carbon::parse($kelas->tanggal_mulai)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($kelas->tanggal_selesai)->translatedFormat('d M Y') }}</td></tr>
-            <tr><td class="font-bold">Instruktur</td><td>:</td><td>{{ $kelas->instruktur->user->name }}</td></tr>
+            <tr><td class="font-bold w-32">Program</td><td class="w-4">:</td><td>{{ $kelas?->programPelatihan?->nama_program ?? 'Program Terhapus' }}</td></tr>
+            <tr><td class="font-bold">Kelas</td><td>:</td><td>{{ $kelas?->nama_kelas ?? 'Kelas Terhapus' }}</td></tr>
+            <tr><td class="font-bold">Periode</td><td>:</td><td>{{ \Carbon\Carbon::parse($kelas?->tanggal_mulai ?? now())->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($kelas?->tanggal_selesai ?? now())->translatedFormat('d M Y') }}</td></tr>
+            <tr><td class="font-bold">Instruktur</td><td>:</td><td>{{ $kelas?->instruktur?->user?->name ?? 'Belum Ditentukan' }}</td></tr>
         </table>
     </div>
 
@@ -56,11 +56,12 @@
             @forelse($pesertaKelas as $key => $item)
             <tr>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $key + 1 }}</td>
-                <td class="border border-gray-800 py-2 px-2 font-bold">{{ $item->peserta->user->name }}</td>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->peserta->nik }}</td>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->kehadiran }}%</td>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_teori }}</td>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_praktik }}</td>
+                
+                <td class="border border-gray-800 py-2 px-2 font-bold">{{ $item->peserta?->user?->name ?? 'Peserta Terhapus' }}</td>
+                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->peserta?->nik ?? '-' }}</td>
+                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->kehadiran ?? 0 }}%</td>
+                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_teori ?? 0 }}</td>
+                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_praktik ?? 0 }}</td>
                 <td class="border border-gray-800 py-2 px-2 text-center font-bold uppercase">
                     @if($item->status_kelulusan == 'lulus')
                         <span class="text-green-700">Lulus</span>
@@ -91,8 +92,8 @@
             <p>Wonosobo, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
             <p class="font-bold">Instruktur Pengampu</p>
             <div class="h-24"></div>
-            <p class="font-bold underline text-[#201e1f]">{{ $kelas->instruktur->user->name }}</p>
-            <p class="text-xs text-gray-500">Spesialisasi: {{ $kelas->instruktur->spesialisasi_las }}</p>
+            <p class="font-bold underline text-[#201e1f]">{{ $kelas?->instruktur?->user?->name ?? '.....................................' }}</p>
+            <p class="text-xs text-gray-500">Spesialisasi: {{ $kelas?->instruktur?->spesialisasi_las ?? '-' }}</p>
         </div>
     </div>
 

@@ -61,6 +61,14 @@ class ProgramPelatihanController extends Controller
     public function destroy($id)
     {
         $program = ProgramPelatihan::findOrFail($id);
+        
+        // CEK PENGAMAN: Apakah program ini punya kelas yang terkait?
+        $jumlahKelas = \App\Models\Kelas::where('program_pelatihan_id', $id)->count();
+        
+        if ($jumlahKelas > 0) {
+            return redirect()->route('admin.program.index')->with('error', 'TOLAK: Program ini tidak bisa dihapus karena masih memiliki ' . $jumlahKelas . ' kelas/angkatan. Silakan hapus atau ubah kelas tersebut terlebih dahulu.');
+        }
+
         $program->delete();
 
         return redirect()->route('admin.program.index')->with('success', 'Program Pelatihan berhasil dihapus!');

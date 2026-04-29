@@ -53,15 +53,19 @@
             @forelse($laporan as $key => $item)
             <tr>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $key + 1 }}</td>
+                
                 <td class="border border-gray-800 py-2 px-2 font-bold">
-                    {{ $item->peserta->user->name }}
-                    <div class="font-normal text-[10px] text-gray-500">{{ $item->peserta->nik }}</div>
+                    {{ $item->peserta?->user?->name ?? 'Data Terhapus' }}
+                    <div class="font-normal text-[10px] text-gray-500">{{ $item->peserta?->nik ?? '-' }}</div>
                 </td>
+                
                 <td class="border border-gray-800 py-2 px-2">
-                    {{ $item->kelas->nama_kelas }}
-                    <div class="text-[10px] text-gray-500">{{ $item->kelas->programPelatihan->nama_program }}</div>
+                    {{ $item->kelas?->nama_kelas ?? 'Kelas Terhapus' }}
+                    <div class="text-[10px] text-gray-500">{{ $item->kelas?->programPelatihan?->nama_program ?? 'Program Terhapus' }}</div>
                 </td>
-                <td class="border border-gray-800 py-2 px-2">{{ $item->kelas->instruktur->user->name ?? '-' }}</td>
+                
+                <td class="border border-gray-800 py-2 px-2">{{ $item->kelas?->instruktur?->user?->name ?? '-' }}</td>
+                
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->kehadiran }}%</td>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_teori }}</td>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_praktik }}</td>
