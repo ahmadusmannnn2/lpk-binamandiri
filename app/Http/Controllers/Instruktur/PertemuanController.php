@@ -8,39 +8,47 @@ use App\Models\Kelas;
 use App\Models\Pendaftaran;
 use App\Models\Pertemuan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage; // WAJIB TAMBAH INI UNTUK UPLOAD MATERI
 
 class PertemuanController extends Controller
 {
-    // 1. Menyimpan Pertemuan Baru
+    // 1. Menyimpan Pertemuan Baru (Ditambah Upload Materi)
     public function store(Request $request, $kelas_id)
     {
         $request->validate([
             'judul_pertemuan' => 'required|string|max:255',
             'tanggal' => 'required|date',
+            'file_materi' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip,rar|max:5120', // Maks 5MB
         ]);
+
+        $materiPath = null;
+        if ($request->hasFile('file_materi')) {
+            $materiPath = $request->file('file_materi')->store('materi_pertemuan', 'public');
+        }
 
         $pertemuan = Pertemuan::create([
             'kelas_id' => $kelas_id,
             'judul_pertemuan' => $request->judul_pertemuan,
             'tanggal' => $request->tanggal,
+            'file_materi' => $materiPath, // Simpan path materi
         ]);
 
-        // Canggih: Otomatis buatkan draf absen "Alpa" untuk semua peserta yang disetujui di kelas ini
+        // Otomatis buatkan draf absen "Alpa" untuk semua peserta yang disetujui di kelas ini
         $pesertaKelas = Pendaftaran::where('kelas_id', $kelas_id)->where('status_pendaftaran', 'disetujui')->get();
         foreach ($pesertaKelas as $peserta) {
             Absensi::create([
                 'pertemuan_id' => $pertemuan->id,
                 'pendaftaran_id' => $peserta->id,
-                'status' => 'alpa' // Default jika belum diabsen instruktur
+                'status' => 'alpa'
             ]);
         }
 
         $this->updatePersentaseKehadiran($kelas_id);
 
-        return back()->with('success', 'Jadwal Pertemuan berhasil ditambahkan!');
+        return back()->with('success', 'Pertemuan & Materi berhasil ditambahkan!');
     }
 
-    // 2. Menampilkan Form Absensi untuk 1 Pertemuan
+    // 2. Menampilkan Form Absensi
     public function show($id)
     {
         $pertemuan = Pertemuan::with('kelas.programPelatihan')->findOrFail($id);
@@ -49,26 +57,30 @@ class PertemuanController extends Controller
         return view('instruktur.pertemuan.show', compact('pertemuan', 'absensi'));
     }
 
-    // 3. Menyimpan Perubahan Absensi
+    // 3. Menyimpan Perubahan Absensi, Nilai, dan Catatan
     public function simpanAbsensi(Request $request, $id)
     {
         $request->validate([
             'absensi.*.status' => 'required|in:hadir,izin,sakit,alpa',
+            'absensi.*.nilai' => 'nullable|numeric|min:0|max:100',
+            'absensi.*.catatan' => 'nullable|string|max:500',
         ]);
 
         $pertemuan = Pertemuan::findOrFail($id);
 
-        // Update status absensi tiap peserta
         if ($request->has('absensi')) {
             foreach ($request->absensi as $absensi_id => $data) {
-                Absensi::where('id', $absensi_id)->update(['status' => $data['status']]);
+                Absensi::where('id', $absensi_id)->update([
+                    'status' => $data['status'],
+                    'nilai' => $data['nilai'] ?? null,
+                    'catatan' => $data['catatan'] ?? null,
+                ]);
             }
         }
 
-        // Hitung ulang persentase kehadiran
         $this->updatePersentaseKehadiran($pertemuan->kelas_id);
 
-        return back()->with('success', 'Data Absensi Harian berhasil disimpan!');
+        return back()->with('success', 'Absensi, Nilai, dan Catatan berhasil disimpan!');
     }
 
     // 4. Menghapus Pertemuan
@@ -76,31 +88,31 @@ class PertemuanController extends Controller
     {
         $pertemuan = Pertemuan::findOrFail($id);
         $kelas_id = $pertemuan->kelas_id;
-        $pertemuan->delete(); // Ini otomatis akan menghapus data absensi terkait karena cascade
+        
+        // Hapus file materi jika ada
+        if ($pertemuan->file_materi && Storage::disk('public')->exists($pertemuan->file_materi)) {
+            Storage::disk('public')->delete($pertemuan->file_materi);
+        }
 
+        $pertemuan->delete(); // Otomatis cascade absensi
         $this->updatePersentaseKehadiran($kelas_id);
 
         return back()->with('success', 'Pertemuan berhasil dihapus!');
     }
 
-    // --- FUNGSI KECERDASAN (AUTO CALCULATE PERSENTASE) ---
     private function updatePersentaseKehadiran($kelas_id)
     {
         $total_pertemuan = Pertemuan::where('kelas_id', $kelas_id)->count();
-        if ($total_pertemuan == 0) return; // Cegah error dibagi 0
+        if ($total_pertemuan == 0) return;
 
         $pendaftarans = Pendaftaran::where('kelas_id', $kelas_id)->where('status_pendaftaran', 'disetujui')->get();
 
         foreach ($pendaftarans as $p) {
-            // Hitung berapa kali peserta ini "hadir" di kelas ini
             $total_hadir = Absensi::whereHas('pertemuan', function($query) use ($kelas_id) {
                 $query->where('kelas_id', $kelas_id);
             })->where('pendaftaran_id', $p->id)->where('status', 'hadir')->count();
 
-            // Hitung persentase
             $persentase = round(($total_hadir / $total_pertemuan) * 100);
-            
-            // Update tabel pendaftaran (yang dipakai untuk nilai akhir)
             $p->update(['kehadiran' => $persentase]);
         }
     }

@@ -14,7 +14,7 @@
                 </div>
                 <div class="relative z-10">
                     <h3 class="text-3xl font-black mb-2">Selamat Datang, {{ Auth::user()->name }}! 👋</h3>
-                    <p class="text-gray-400 max-w-2xl">Pantau seluruh aktivitas pelatihan, pendaftaran peserta, dan manajemen kelas LPK Bina Mandiri dari *command center* ini.</p>
+                    <p class="text-gray-400 max-w-2xl">Pantau seluruh aktivitas pelatihan, pendaftaran peserta, dan manajemen kelas LPK Bina Mandiri dari command center ini.</p>
                 </div>
             </div>
 
@@ -93,12 +93,12 @@
                             @forelse($pendaftar_baru as $item)
                             <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
                                 <td class="p-3">
-                                    <p class="font-bold">{{ $item->peserta->user->name ?? '-' }}</p>
+                                    <p class="font-bold">{{ $item->peserta->user->name ?? 'Akun Terhapus' }}</p>
                                     <p class="text-xs text-gray-400">{{ $item->peserta->nik ?? '-' }}</p>
                                 </td>
                                 <td class="p-3">
-                                    <p class="text-oranye font-bold">{{ $item->kelas->nama_kelas }}</p>
-                                    <p class="text-xs text-gray-500">{{ $item->kelas->programPelatihan->nama_program }}</p>
+                                    <p class="text-oranye font-bold">{{ $item->kelas?->nama_kelas ?? 'Kelas Telah Dihapus' }}</p>
+                                    <p class="text-xs text-gray-500">{{ $item->kelas?->programPelatihan?->nama_program ?? 'Program Tidak Ditemukan' }}</p>
                                 </td>
                                 <td class="p-3">{{ \Carbon\Carbon::parse($item->tanggal_daftar)->translatedFormat('d F Y') }}</td>
                                 <td class="p-3">
@@ -124,12 +124,10 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Data dari Controller
             const dataBulan = @json($grafikBulan);
             const labelKelas = @json($labelKelas);
             const dataKelas = @json($dataKelas);
 
-            // Konfigurasi Grafik 1: Line Chart Tren Bulanan
             const ctxTrend = document.getElementById('chartTrendBulan').getContext('2d');
             new Chart(ctxTrend, {
                 type: 'line',
@@ -146,7 +144,7 @@
                         pointHoverBackgroundColor: '#fff',
                         pointHoverBorderColor: '#de5e2e',
                         fill: true,
-                        tension: 0.4 // Membuat garis melengkung halus (spline)
+                        tension: 0.4
                     }]
                 },
                 options: {
@@ -157,7 +155,6 @@
                 }
             });
 
-            // Konfigurasi Grafik 2: Doughnut Chart Kelas Terpopuler
             const ctxKelas = document.getElementById('chartKelas').getContext('2d');
             new Chart(ctxKelas, {
                 type: 'doughnut',

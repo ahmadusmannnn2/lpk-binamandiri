@@ -73,9 +73,19 @@ class KelasController extends Controller
     public function destroy($id)
     {
         $kelas = Kelas::findOrFail($id);
+        
+        // CEK PENGAMAN: Apakah kelas ini sudah ada pendaftarnya?
+        $jumlahPendaftar =  Pendaftaran::where('kelas_id', $id)->count();
+        
+        if ($jumlahPendaftar > 0) {
+            // Jika ada pesertanya, TOLAK PENGHAPUSAN!
+            return redirect()->route('admin.kelas.index')->with('error', 'TOLAK: Kelas tidak dapat dihapus karena sudah ada ' . $jumlahPendaftar . ' peserta yang mendaftar. Jika kelas sudah berakhir, silakan edit dan ubah statusnya menjadi "Selesai".');
+        }
+
+        // Jika kelas masih kosong / belum ada yang daftar, boleh dihapus
         $kelas->delete();
 
-        return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil dihapus!');
+        return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil dihapus secara permanen!');
     }
 
     public function show($id)
