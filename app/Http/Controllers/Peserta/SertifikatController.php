@@ -17,10 +17,11 @@ class SertifikatController extends Controller
             return redirect()->route('peserta.biodata.index')->with('error', 'Lengkapi biodata Anda terlebih dahulu.');
         }
 
-        // Hanya mengambil pendaftaran yang status kelulusannya "Lulus"
+        // Hanya mengambil sertifikat yang Lulus DAN Nomor Sertifikatnya sudah ada (JSON)
         $sertifikat = Pendaftaran::with(['kelas.programPelatihan', 'kelas.instruktur.user'])
                         ->where('peserta_id', $peserta->id)
                         ->where('status_kelulusan', 'lulus')
+                        ->whereNotNull('detail_nilai->nomor_sertifikat') // Filter JSON baru
                         ->latest()
                         ->get();
 
@@ -31,14 +32,16 @@ class SertifikatController extends Controller
     {
         $peserta = Auth::user()->peserta;
 
-        // Ambil data kelulusan spesifik, pastikan itu milik user yang sedang login
-        $pendaftaran = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan'])
+        $pendaftaran = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan', 'kelas.instruktur.user'])
                         ->where('id', $id)
                         ->where('peserta_id', $peserta->id)
                         ->where('status_kelulusan', 'lulus')
+                        ->whereNotNull('detail_nilai->nomor_sertifikat') // Pastikan hanya yg sudah ada nomornya yg bisa dicetak
                         ->firstOrFail();
 
-        // Kita gunakan layout khusus cetak (tanpa navbar/sidebar)
-        return view('peserta.sertifikat.cetak', compact('pendaftaran'));
+        $nomorSertifikat = $pendaftaran->detail_nilai['nomor_sertifikat'];
+
+        // Alihkan ke file View cetak yang sama dengan milik Admin agar desainnya sinkron!
+        return view('admin.sertifikat.cetak', compact('pendaftaran', 'nomorSertifikat'));
     }
 }

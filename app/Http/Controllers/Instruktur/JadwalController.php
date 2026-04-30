@@ -33,40 +33,64 @@ class JadwalController extends Controller
     {
         $request->validate([
             'nilai.*.detail' => 'nullable|array',
-            'nilai.*.detail.*.skor' => 'nullable|numeric|min:0|max:100', // Validasi skor
-            'nilai.*.detail.*.catatan' => 'nullable|string|max:255', // Validasi catatan per nilai
+            'nilai.*.detail.*.skor' => 'nullable|numeric|min:0|max:100',
+            'nilai.*.detail.*.catatan' => 'nullable|string|max:255',
             'nilai.*.catatan_akhir' => 'nullable|string|max:500',
-            'nilai.*.status_kelulusan' => 'required|in:belum_dinilai,lulus,tidak_lulus',
         ]);
 
         if($request->has('nilai')) {
             foreach ($request->nilai as $pendaftaran_id => $data) {
                 
-                $detailNilai = $data['detail'] ?? [];
+                // AMBIL DATA PENDAFTARAN LAMA (Agar no sertifikat dari Admin tidak hilang tertimpa!)
+                $pendaftaran_lama = Pendaftaran::find($pendaftaran_id);
+                $detailNilai_lama = $pendaftaran_lama->detail_nilai ?? [];
                 
-                // Kalkulasi Total dan Rata-rata Otomatis dari 'skor'
+                $detailNilai_baru = $data['detail'] ?? [];
+                
+                // Kalkulasi Total dan Rata-rata Otomatis dari 'skor' baru
                 $nilai_total = 0;
-                $jumlah_kriteria = count($detailNilai);
+                $jumlah_kriteria = count($detailNilai_baru);
+                $skor_diinput = 0;
                 
-                foreach($detailNilai as $kriteria => $info) {
-                    $nilai_total += (int) ($info['skor'] ?? 0);
+                foreach($detailNilai_baru as $kriteria => $info) {
+                    if (isset($info['skor']) && $info['skor'] !== '') {
+                        $nilai_total += (int) $info['skor'];
+                        $skor_diinput++;
+                    }
                 }
                 
-                $nilai_rata_rata = $jumlah_kriteria > 0 ? ($nilai_total / $jumlah_kriteria) : 0;
+                $nilai_rata_rata = $skor_diinput > 0 ? round(($nilai_total / $skor_diinput), 2) : 0;
 
-                // Masukkan catatan akhir keseluruhan ke dalam array JSON
-                $detailNilai['catatan_instruktur_final'] = $data['catatan_akhir'] ?? null;
+                // Masukkan catatan akhir instruktur ke array baru
+                $detailNilai_baru['catatan_instruktur_final'] = $data['catatan_akhir'] ?? null;
+                
+                // KEMBALIKAN DATA ADMIN (Nomor & Tanggal Sertifikat) ke array baru
+                if(isset($detailNilai_lama['nomor_sertifikat'])) {
+                    $detailNilai_baru['nomor_sertifikat'] = $detailNilai_lama['nomor_sertifikat'];
+                }
+                if(isset($detailNilai_lama['tanggal_terbit'])) {
+                    $detailNilai_baru['tanggal_terbit'] = $detailNilai_lama['tanggal_terbit'];
+                }
+
+                // KEPUTUSAN OTOMATIS: Lulus jika Rata-rata >= 70
+                if ($skor_diinput == 0) {
+                    $status_kelulusan = 'belum_dinilai';
+                } elseif ($nilai_rata_rata >= 70) {
+                    $status_kelulusan = 'lulus';
+                } else {
+                    $status_kelulusan = 'tidak_lulus';
+                }
 
                 Pendaftaran::where('id', $pendaftaran_id)->update([
-                    'detail_nilai' => $detailNilai,
+                    'detail_nilai' => $detailNilai_baru,
                     'nilai_total' => $nilai_total,
                     'nilai_rata_rata' => $nilai_rata_rata,
-                    'status_kelulusan' => $data['status_kelulusan'],
+                    'status_kelulusan' => $status_kelulusan,
                 ]);
             }
         }
 
-        return redirect()->route('instruktur.jadwal.show', $id)->with('success', 'Rapor Penilaian Detail, Catatan, dan Kelulusan berhasil disimpan!');
+        return redirect()->route('instruktur.jadwal.show', $id)->with('success', 'Nilai dan Kelulusan berhasil dihitung & disimpan secara otomatis!');
     }
 
     public function cetak($id)

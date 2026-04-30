@@ -34,10 +34,25 @@
                         </div>
 
                         <div class="bg-orange-50 p-5 rounded-xl border border-orange-100">
-                            <x-input-label for="parameter_penilaian" :value="__('Parameter Penilaian (Pisahkan dengan koma)')" class="text-oranye font-black" />
-                            <x-text-input id="parameter_penilaian" class="block mt-2 w-full focus:border-oranye focus:ring-oranye rounded-xl border-orange-200" type="text" name="parameter_penilaian" value="{{ old('parameter_penilaian', is_array($program->parameter_penilaian) ? implode(', ', $program->parameter_penilaian) : '') }}" placeholder="Contoh: 1F, 2F, 3F, 1G, Teori Bahasa" required />
-                            <p class="text-xs text-gray-600 mt-2">Ketik kriteria yang akan dinilai oleh instruktur nanti, <strong>wajib dipisahkan dengan tanda koma ( , )</strong>.</p>
+                            <x-input-label for="parameter_penilaian" :value="__('Parameter Penilaian (Pisahkan dengan koma)')" class="text-oranye font-black text-lg mb-2" />
+                            
+                            <p class="text-sm text-gray-700 mb-3 font-medium">
+                                Masukkan daftar kriteria kompetensi yang akan dinilai oleh instruktur pada akhir kelas. Setiap kriteria <strong>harus dipisahkan dengan tanda koma ( , )</strong>. Parameter ini akan muncul sebagai kolom penilaian di akun instruktur dan akan dicetak pada bagian belakang sertifikat.
+                            </p>
+                            
+                            <x-text-input id="parameter_penilaian" class="block mt-2 w-full focus:border-oranye focus:ring-oranye rounded-xl border-orange-200" type="text" name="parameter_penilaian" value="{{ old('parameter_penilaian', is_array($program->parameter_penilaian) ? implode(', ', $program->parameter_penilaian) : '') }}" placeholder="Ketik di sini... (Pisahkan dengan koma)" required />
                             <x-input-error :messages="$errors->get('parameter_penilaian')" class="mt-2" />
+
+                            <div class="mt-4 bg-white p-4 rounded-lg border border-orange-200 shadow-sm">
+                                <span class="font-bold text-gray-800 text-sm block mb-2 underline decoration-oranye decoration-2 underline-offset-4">Contoh Pengisian Berdasarkan Program:</span>
+                                
+                                <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1 mt-2">
+                                    <li><strong>Program Pengelasan Dasar:</strong> <span class="italic text-gray-500">1F, 2F, 3F, Teori Dasar Las, Praktik K3</span></li>
+                                    <li><strong>Program Sertifikasi SMAW:</strong> <span class="italic text-gray-500">1G, 2G, 3G, 4G, Inspeksi Visual (VT)</span></li>
+                                    <li><strong>Program Pipe Welding (GTAW):</strong> <span class="italic text-gray-500">2G (Pipe), 5G (Pipe), 6G (Pipe), Pemahaman Blueprint</span></li>
+                                    <li><strong>Program Umum (Selain Las):</strong> <span class="italic text-gray-500">Kehadiran Aktif, Ujian Tengah Semester, Ujian Praktik Akhir, Sikap & Etika</span></li>
+                                </ul>
+                            </div>
                         </div>
 
                         <div>

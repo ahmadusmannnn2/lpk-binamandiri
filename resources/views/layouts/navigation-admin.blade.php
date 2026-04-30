@@ -14,7 +14,8 @@
 
 <div x-data="{ sidebarOpen: false }">
 
-    <nav class="sticky top-0 z-40 bg-hitam/80 backdrop-blur-lg border-b border-oranye/50 shadow-lg transition-all duration-300">
+    <!-- UBAH KE FIXED & W-FULL AGAR SELALU MENEMPEL DI ATAS -->
+    <nav class="fixed top-0 inset-x-0 w-full z-40 bg-hitam/80 backdrop-blur-lg border-b border-oranye/50 shadow-lg transition-all duration-300">
         <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 
@@ -58,6 +59,10 @@
         </div>
     </nav>
 
+    <!-- SPACER: Ganjalan setinggi navbar (h-20) agar konten di bawahnya tidak tertutup -->
+    <div class="h-20"></div>
+
+    <!-- Sisa Sidebar (Tidak Berubah) -->
     <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 bg-black/80 z-50 backdrop-blur-sm" @click="sidebarOpen = false" style="display: none;"></div>
 
     <aside class="fixed inset-y-0 left-0 w-72 bg-hitam border-r border-gray-800 z-[60] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col"
@@ -103,13 +108,13 @@
                 </div>
             </div>
 
-            <!-- MENU VERIFIKASI (KEMBALI SEPERTI SEMULA) -->
+            <!-- MENU VERIFIKASI -->
             <a href="{{ route('admin.verifikasi.index') }}" class="flex items-center px-6 py-4 transition duration-200 border-l-4 {{ request()->routeIs('admin.verifikasi.*') ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
                 <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span class="font-bold">Verifikasi Pendaftar</span>
             </a>
 
-            <!-- AKADEMIK & KELULUSAN (MENU BARU) -->
+            <!-- AKADEMIK & KELULUSAN -->
             <div x-data="{ akademikOpen: {{ $isAkademikActive ? 'true' : 'false' }} }">
                 <button @click="akademikOpen = !akademikOpen" class="w-full flex items-center justify-between px-6 py-4 transition duration-200 border-l-4 {{ $isAkademikActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
                     <div class="flex items-center">
@@ -120,7 +125,6 @@
                 </button>
                 
                 <div x-show="akademikOpen" x-collapse class="bg-[#0a0a0a] py-2 border-y border-gray-800" style="display: {{ $isAkademikActive ? 'block' : 'none' }};">
-                    <!-- LINK SUDAH DIPERBAIKI MENGARAH KE ROUTE YANG BENAR -->
                     <a href="{{ route('admin.nilai.index') }}" class="flex items-center pl-16 pr-6 py-3 text-sm transition {{ request()->routeIs('admin.nilai.*') ? 'text-oranye font-bold' : 'text-gray-300 hover:text-white hover:bg-gray-900' }}">
                         <div class="w-1.5 h-1.5 rounded-full mr-3 {{ request()->routeIs('admin.nilai.*') ? 'bg-oranye shadow-[0_0_8px_rgba(222,94,46,0.8)]' : 'bg-gray-600' }}"></div> Rekap Nilai Peserta
                     </a>

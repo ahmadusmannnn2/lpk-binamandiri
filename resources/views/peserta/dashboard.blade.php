@@ -129,10 +129,17 @@
                             
                             @if($kelasAktif->status_kelulusan == 'lulus')
                             <div class="mt-4">
-                                <a href="{{ route('peserta.sertifikat.index') }}" class="block w-full text-center bg-hitam text-white py-3 rounded-xl font-bold shadow-lg hover:bg-oranye transition flex justify-center items-center gap-2 transform hover:-translate-y-1">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Ambil Sertifikat Saya
-                                </a>
+                                @if(isset($detailNilai['nomor_sertifikat']))
+                                    <a href="{{ route('peserta.sertifikat.index') }}" class="block w-full text-center bg-hitam text-white py-3 rounded-xl font-bold shadow-lg hover:bg-oranye transition flex justify-center items-center gap-2 transform hover:-translate-y-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Ambil Sertifikat Saya
+                                    </a>
+                                @else
+                                    <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-xl text-center shadow-sm">
+                                        <p class="text-[11px] font-bold text-yellow-800 uppercase tracking-widest mb-1">Status Sertifikat</p>
+                                        <p class="text-xs text-yellow-700">Anda telah lulus. Menunggu Admin memproses & menerbitkan nomor registrasi sertifikat Anda.</p>
+                                    </div>
+                                @endif
                             </div>
                             @endif
 

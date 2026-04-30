@@ -12,7 +12,7 @@
                 </div>
                 <div class="relative z-10">
                     <h3 class="text-3xl font-black mb-2">Pencapaian Anda 🏆</h3>
-                    <p class="text-gray-300 max-w-2xl">Berikut adalah daftar sertifikat kompetensi dari kelas pelatihan yang telah berhasil Anda selesaikan. Unduh dan gunakan untuk menunjang karir Anda.</p>
+                    <p class="text-gray-300 max-w-2xl">Berikut adalah daftar sertifikat kompetensi dari kelas pelatihan yang telah Anda selesaikan dan disahkan oleh Admin. Unduh dan gunakan untuk menunjang karir Anda.</p>
                 </div>
             </div>
 
@@ -34,21 +34,21 @@
                             </div>
                             
                             <div class="bg-white rounded-lg border border-gray-100 p-4 mb-6 mt-auto">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-xs text-gray-500 font-bold uppercase">Nilai Teori</span>
-                                    <span class="text-sm font-black text-hitam">{{ $item->nilai_teori ?? '-' }}</span>
+                                <div class="flex justify-between items-center mb-2 pb-2 border-b border-gray-100">
+                                    <span class="text-xs text-gray-500 font-bold uppercase">No. Registrasi</span>
+                                    <span class="text-sm font-black text-hitam">{{ $item->detail_nilai['nomor_sertifikat'] ?? '-' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center mb-2">
-                                    <span class="text-xs text-gray-500 font-bold uppercase">Nilai Praktik</span>
-                                    <span class="text-sm font-black text-hitam">{{ $item->nilai_praktik ?? '-' }}</span>
+                                    <span class="text-xs text-gray-500 font-bold uppercase">Nilai Rata-Rata</span>
+                                    <span class="text-sm font-black text-blue-700">{{ $item->nilai_rata_rata ?? 0 }}</span>
                                 </div>
                                 <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-                                    <span class="text-xs text-gray-500 font-bold uppercase">Tgl Kelulusan</span>
-                                    <span class="text-xs font-bold text-oranye">{{ \Carbon\Carbon::parse($item->updated_at)->format('d F Y') }}</span>
+                                    <span class="text-xs text-gray-500 font-bold uppercase">Tgl Terbit</span>
+                                    <span class="text-xs font-bold text-oranye">{{ \Carbon\Carbon::parse($item->detail_nilai['tanggal_terbit'] ?? now())->translatedFormat('d F Y') }}</span>
                                 </div>
                             </div>
                             
-                            <a href="{{ route('peserta.sertifikat.cetak', $item->id) }}" target="_blank" class="block w-full text-center bg-hitam text-white px-4 py-3 rounded-lg hover:bg-oranye transition font-bold shadow hover:shadow-lg flex items-center justify-center gap-2">
+                            <a href="{{ route('peserta.sertifikat.cetak', $item->id) }}" target="_blank" class="block w-full text-center bg-hitam text-white px-4 py-3 rounded-lg hover:bg-oranye transition font-bold shadow hover:shadow-lg flex items-center justify-center gap-2 transform group-hover:-translate-y-1">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 Lihat & Cetak Sertifikat
                             </a>
@@ -60,7 +60,7 @@
                             <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                         </div>
                         <h4 class="text-xl font-bold text-hitam mb-2">Belum Ada Sertifikat</h4>
-                        <p class="text-gray-500 max-w-md mx-auto">Anda belum memiliki sertifikat kelulusan. Terus semangat belajar dan penuhi standar kelulusan kelas Anda!</p>
+                        <p class="text-gray-500 max-w-md mx-auto">Anda belum memiliki sertifikat kelulusan yang sudah dicetak oleh Admin. Terus semangat belajar!</p>
                     </div>
                 @endforelse
             </div>

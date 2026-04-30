@@ -42,7 +42,9 @@
                 <div class="p-6">
                     <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                         <h3 class="text-lg font-black text-hitam border-b-2 border-oranye pb-1 inline-block">Buku Penilaian & Evaluasi</h3>
-                        <p class="text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">Klik icon 📝 untuk menambah catatan pada kriteria tertentu.</p>
+                        <p class="text-xs text-gray-500 bg-blue-50 text-blue-800 px-3 py-1.5 rounded-lg border border-blue-200">
+                            ℹ️ Keputusan Lulus/Gagal akan ditentukan otomatis oleh sistem jika Rata-rata <strong>≥ 70</strong>.
+                        </p>
                     </div>
 
                     @php
@@ -70,7 +72,7 @@
                                         
                                         <th class="py-3 px-4 text-center bg-blue-50 text-blue-800">Rata-rata</th>
                                         <th class="py-3 px-4 text-center text-hitam">Catatan Akhir</th>
-                                        <th class="py-3 px-4 text-center bg-orange-50 text-oranye whitespace-nowrap">Keputusan</th>
+                                        <th class="py-3 px-4 text-center bg-gray-50 text-gray-600">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-gray-600 text-sm">
@@ -134,8 +136,8 @@
                                             
                                             <div x-show="openFinal" x-transition style="display: none;" class="relative">
                                                 <textarea name="nilai[{{ $pendaftaran->id }}][catatan_akhir]" rows="2" 
-                                                       placeholder="Catatan umum (Sikap, Rekomendasi, dll)..."
-                                                       class="w-48 rounded-md border-gray-300 focus:border-oranye focus:ring-oranye text-[10px] font-medium placeholder-gray-300 p-2 bg-yellow-50">{{ $catatanAkhir }}</textarea>
+                                                          placeholder="Catatan umum..."
+                                                          class="w-48 rounded-md border-gray-300 focus:border-oranye focus:ring-oranye text-[10px] font-medium placeholder-gray-300 p-2 bg-yellow-50">{{ $catatanAkhir }}</textarea>
                                                 
                                                 <button type="button" @click="openFinal = false" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600" title="Tutup">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -143,18 +145,20 @@
                                             </div>
                                         </td>
 
-                                        <td class="py-3 px-4 text-center bg-orange-50/30 align-top pt-4">
-                                            <select name="nilai[{{ $pendaftaran->id }}][status_kelulusan]" class="rounded-md border-gray-300 focus:border-oranye focus:ring-oranye text-xs font-bold w-32 shadow-sm cursor-pointer">
-                                                <option value="belum_dinilai" {{ $pendaftaran->status_kelulusan == 'belum_dinilai' ? 'selected' : '' }} class="text-gray-500">⏱ Proses Belajar</option>
-                                                <option value="lulus" {{ $pendaftaran->status_kelulusan == 'lulus' ? 'selected' : '' }} class="text-green-600">✅ LULUS</option>
-                                                <option value="tidak_lulus" {{ $pendaftaran->status_kelulusan == 'tidak_lulus' ? 'selected' : '' }} class="text-red-600">❌ GAGAL</option>
-                                            </select>
+                                        <td class="py-3 px-4 text-center bg-gray-50/50 align-top pt-5">
+                                            @if($pendaftaran->status_kelulusan == 'lulus')
+                                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-black uppercase shadow-sm">LULUS</span>
+                                            @elseif($pendaftaran->status_kelulusan == 'tidak_lulus')
+                                                <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-black uppercase shadow-sm">GAGAL</span>
+                                            @else
+                                                <span class="text-gray-400 text-xs italic">Belum Dinilai</span>
+                                            @endif
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
                                         <td colspan="10" class="py-10 text-center text-gray-400">
-                                            <span class="block italic">Belum ada peserta yang masuk ke kelas ini.</span>
+                                            <span class="block italic">Belum ada peserta yang disetujui di kelas ini.</span>
                                         </td>
                                     </tr>
                                     @endforelse
@@ -174,6 +178,7 @@
                 </div>
             </div>
 
+            <!-- ... BAGIAN JADWAL PERTEMUAN (Tidak ada yang diubah) ... -->
             <div class="mt-10 bg-white overflow-hidden shadow-xl rounded-xl border border-gray-100">
                 <div class="p-6 sm:p-8">
                     <h3 class="text-xl font-black text-hitam mb-6 flex items-center gap-2">
