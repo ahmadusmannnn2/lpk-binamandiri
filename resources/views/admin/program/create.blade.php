@@ -18,11 +18,20 @@
                             <x-input-error :messages="$errors->get('nama_program')" class="mt-2" />
                         </div>
 
-                        <div>
-                            <x-input-label for="harga_pelatihan" :value="__('Harga Pelatihan (Rp)')" class="text-hitam font-bold" />
-                            <x-text-input id="harga_pelatihan" class="block mt-1 w-full focus:border-oranye focus:ring-oranye rounded-xl" type="number" name="harga_pelatihan" :value="old('harga_pelatihan', 0)" required />
-                            <p class="text-xs text-gray-500 mt-1 font-medium">Isi 0 jika program ini gratis.</p>
-                            <x-input-error :messages="$errors->get('harga_pelatihan')" class="mt-2" />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <x-input-label for="harga_pelatihan" :value="__('Harga Pelatihan (Rp)')" class="text-hitam font-bold" />
+                                <x-text-input id="harga_pelatihan" class="block mt-1 w-full focus:border-oranye focus:ring-oranye rounded-xl" type="number" name="harga_pelatihan" :value="old('harga_pelatihan', 0)" required />
+                                <p class="text-xs text-gray-500 mt-1 font-medium">Isi 0 jika program ini gratis.</p>
+                                <x-input-error :messages="$errors->get('harga_pelatihan')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="durasi_hari" :value="__('Durasi Kelas (Hari Kerja)')" class="text-hitam font-bold" />
+                                <x-text-input id="durasi_hari" class="block mt-1 w-full focus:border-oranye focus:ring-oranye rounded-xl" type="number" name="durasi_hari" :value="old('durasi_hari', 0)" required />
+                                <p class="text-xs text-gray-500 mt-1 font-medium">Contoh: 28</p>
+                                <x-input-error :messages="$errors->get('durasi_hari')" class="mt-2" />
+                            </div>
                         </div>
 
                         <div class="bg-orange-50 p-5 rounded-xl border border-orange-100">

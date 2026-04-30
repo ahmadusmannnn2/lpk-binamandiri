@@ -29,18 +29,34 @@ class KelasController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_kelas' => 'required|string|max:255',
             'program_pelatihan_id' => 'required|exists:program_pelatihan,id',
             'instruktur_id' => 'required|exists:instruktur,id',
+            'nama_kelas' => 'required|string|max:255',
             'kuota_peserta' => 'required|integer|min:1',
             'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'status_kelas' => 'required|in:menunggu,berjalan,selesai',
         ]);
 
-        Kelas::create($request->all());
+        // Cari durasi hari dari program yang dipilih
+        $program = ProgramPelatihan::findOrFail($request->program_pelatihan_id);
+        
+        // MANTRA CARBON: Tambah hari kerja (Senin-Jumat) dari tanggal mulai
+        // Dikurangi 1 karena hari H (tanggal mulai) sudah dihitung sebagai hari ke-1
+        $tanggalSelesaiOtomatis = \Carbon\Carbon::parse($request->tanggal_mulai)
+                                    ->addWeekdays($program->durasi_hari - 1)
+                                    ->format('Y-m-d');
 
-        return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil dibuat!');
+        Kelas::create([
+            'program_pelatihan_id' => $request->program_pelatihan_id,
+            'instruktur_id' => $request->instruktur_id,
+            'nama_kelas' => $request->nama_kelas,
+            'kuota_peserta' => $request->kuota_peserta,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $tanggalSelesaiOtomatis, // Auto Input!
+            'status_kelas' => $request->status_kelas,
+        ]);
+
+        return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil ditambahkan! Tanggal selesai dihitung otomatis berdasarkan hari kerja (Senin-Jumat).');
     }
 
     public function edit($id)
@@ -55,19 +71,33 @@ class KelasController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama_kelas' => 'required|string|max:255',
             'program_pelatihan_id' => 'required|exists:program_pelatihan,id',
             'instruktur_id' => 'required|exists:instruktur,id',
+            'nama_kelas' => 'required|string|max:255',
             'kuota_peserta' => 'required|integer|min:1',
             'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'status_kelas' => 'required|in:menunggu,berjalan,selesai',
         ]);
 
         $kelas = Kelas::findOrFail($id);
-        $kelas->update($request->all());
+        $program = ProgramPelatihan::findOrFail($request->program_pelatihan_id);
+        
+        // Kalkulasi ulang jika tanggal mulai / programnya diubah
+        $tanggalSelesaiOtomatis = \Carbon\Carbon::parse($request->tanggal_mulai)
+                                    ->addWeekdays($program->durasi_hari - 1)
+                                    ->format('Y-m-d');
 
-        return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil diperbarui!');
+        $kelas->update([
+            'program_pelatihan_id' => $request->program_pelatihan_id,
+            'instruktur_id' => $request->instruktur_id,
+            'nama_kelas' => $request->nama_kelas,
+            'kuota_peserta' => $request->kuota_peserta,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $tanggalSelesaiOtomatis, // Auto Input!
+            'status_kelas' => $request->status_kelas,
+        ]);
+
+        return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil diperbarui! Tanggal selesai dihitung otomatis.');
     }
 
     public function destroy($id)

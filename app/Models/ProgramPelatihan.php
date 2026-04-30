@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Casts\Attribute; // Wajib dipanggil untuk fitur penerjemah otomatis
+use Illuminate\Database\Eloquent\Casts\Attribute; 
 
 class ProgramPelatihan extends Model
 {
     use SoftDeletes;
 
     protected $table = 'program_pelatihan';
+    
+    // Mengizinkan semua kolom diisi (termasuk durasi_hari yang baru kita buat)
     protected $guarded = ['id'];
 
     // MESIN PINTAR: Mengubah input "1F, 2F, 3F" menjadi Array JSON secara otomatis saat disimpan

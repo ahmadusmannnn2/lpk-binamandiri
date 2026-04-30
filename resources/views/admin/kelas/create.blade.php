@@ -41,14 +41,15 @@
                                     <x-input-label for="kuota_peserta" :value="__('Kuota Peserta')" class="text-hitam font-bold" />
                                     <x-text-input id="kuota_peserta" class="block mt-1 w-full focus:ring-oranye focus:border-oranye" type="number" name="kuota_peserta" :value="old('kuota_peserta', 20)" required />
                                 </div>
-                                <div>
+                                
+                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
                                     <x-input-label for="tanggal_mulai" :value="__('Tanggal Mulai')" class="text-hitam font-bold" />
                                     <x-text-input id="tanggal_mulai" class="block mt-1 w-full focus:ring-oranye focus:border-oranye" type="date" name="tanggal_mulai" :value="old('tanggal_mulai')" required />
+                                    <p class="text-[10px] text-blue-600 mt-2 font-bold leading-tight">
+                                        ℹ️ Tanggal selesai kelas akan dihitung otomatis oleh sistem berdasarkan durasi hari program (Senin-Jumat).
+                                    </p>
                                 </div>
-                                <div>
-                                    <x-input-label for="tanggal_selesai" :value="__('Tanggal Selesai')" class="text-hitam font-bold" />
-                                    <x-text-input id="tanggal_selesai" class="block mt-1 w-full focus:ring-oranye focus:border-oranye" type="date" name="tanggal_selesai" :value="old('tanggal_selesai')" required />
-                                </div>
+                                
                                 <div>
                                     <x-input-label for="status_kelas" :value="__('Status Kelas')" class="text-hitam font-bold" />
                                     <select name="status_kelas" id="status_kelas" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-oranye focus:ring-oranye" required>
