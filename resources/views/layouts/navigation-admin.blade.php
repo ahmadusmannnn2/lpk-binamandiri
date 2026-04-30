@@ -1,9 +1,17 @@
 @php
     // Logika Cerdas Foto Profil
     $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&color=FFFFFF&background=de5e2e';
-    if (Auth::user()->role === 'peserta' && Auth::user()->peserta && Auth::user()->peserta->pas_foto) {
+    
+    // PRIORITAS 1: Avatar kustom dari Profile (Fitur Baru)
+    if (Auth::user()->avatar) {
+        $avatarUrl = asset('storage/' . Auth::user()->avatar);
+    } 
+    // PRIORITAS 2: Pas foto saat pendaftaran (Peserta)
+    elseif (Auth::user()->role === 'peserta' && Auth::user()->peserta && Auth::user()->peserta->pas_foto) {
         $avatarUrl = asset('storage/' . Auth::user()->peserta->pas_foto);
-    } elseif (Auth::user()->role === 'instruktur' && Auth::user()->instruktur && Auth::user()->instruktur->foto) {
+    } 
+    // PRIORITAS 3: Foto profil bawaan Instruktur
+    elseif (Auth::user()->role === 'instruktur' && Auth::user()->instruktur && Auth::user()->instruktur->foto) {
         $avatarUrl = asset('storage/' . Auth::user()->instruktur->foto);
     }
     

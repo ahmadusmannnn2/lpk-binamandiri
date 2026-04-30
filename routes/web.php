@@ -97,15 +97,37 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
 
     Route::get('/dashboard', function () {
         $instruktur = auth()->user()->instruktur;
-        $stats = [
-            'kelas_saya' => $instruktur ? \App\Models\Kelas::where('instruktur_id', $instruktur->id)->count() : 0,
-            'kelas_aktif' => $instruktur ? \App\Models\Kelas::where('instruktur_id', $instruktur->id)->where('status_kelas', 'berjalan')->count() : 0,
-        ];
-        $jadwal = $instruktur ? \App\Models\Pertemuan::with('kelas')->whereHas('kelas', function ($q) use ($instruktur) {
-            $q->where('instruktur_id', $instruktur->id)->where('status_kelas', 'berjalan');
-        })->whereDate('tanggal', '>=', today())->orderBy('tanggal', 'asc')->take(5)->get() : collect();
 
-        return view('instruktur.dashboard', compact('stats', 'jadwal'));
+        // 1. KELAS AKTIF (Untuk Quick Access)
+        $kelasAktif = $instruktur ? \App\Models\Kelas::with(['programPelatihan'])
+            ->withCount(['pendaftaran' => function($q) {
+                $q->where('status_pendaftaran', 'disetujui');
+            }])
+            ->where('instruktur_id', $instruktur->id)
+            ->whereDate('tanggal_selesai', '>=', now())
+            ->get() : collect();
+
+        // 2. AMBIL PERTEMUAN (H-7 sampai H+7)
+        $pertemuan = $instruktur ? \App\Models\Pertemuan::with('kelas.programPelatihan')
+            ->whereHas('kelas', function ($q) use ($instruktur) {
+                $q->where('instruktur_id', $instruktur->id);
+            })
+            ->whereBetween('tanggal', [now()->subDays(7), now()->addDays(7)])
+            ->orderBy('tanggal', 'asc')
+            ->get() : collect();
+
+        // 3. PISAHKAN JADWAL TIMELINE
+        $jadwalHariIni = $pertemuan->filter(fn($j) => \Carbon\Carbon::parse($j->tanggal)->isToday());
+        $jadwalBesok = $pertemuan->filter(fn($j) => \Carbon\Carbon::parse($j->tanggal)->isTomorrow());
+
+        // 4. DETEKSI TUGAS TERTUNDA (Pertemuan yg sudah lewat tapi belum diisi absensinya)
+        $tugasTertunda = $pertemuan->filter(function($j) {
+             return \Carbon\Carbon::parse($j->tanggal)->isPast() &&
+                    !\Carbon\Carbon::parse($j->tanggal)->isToday() &&
+                    \App\Models\Absensi::where('pertemuan_id', $j->id)->count() == 0;
+        });
+
+        return view('instruktur.dashboard', compact('kelasAktif', 'jadwalHariIni', 'jadwalBesok', 'tugasTertunda', 'instruktur'));
     })->name('dashboard');
 
     Route::get('/jadwal', [\App\Http\Controllers\Instruktur\JadwalController::class, 'index'])->name('jadwal.index');

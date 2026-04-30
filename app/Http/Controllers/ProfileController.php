@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -24,6 +25,8 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
+    // Jangan lupa tambahkan ini di paling atas jika belum ada:
+
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
@@ -31,6 +34,18 @@ class ProfileController extends Controller
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
+
+        // --- LOGIKA UPLOAD FOTO PROFIL ---
+        if ($request->hasFile('avatar')) {
+            // Hapus foto lama jika ada
+            if ($request->user()->avatar) {
+                Storage::disk('public')->delete($request->user()->avatar);
+            }
+            // Simpan foto baru
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $request->user()->avatar = $path;
+        }
+        // ---------------------------------
 
         $request->user()->save();
 
