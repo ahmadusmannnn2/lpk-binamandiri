@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Data Peserta LPK Bina Mandiri</title>
+    <title>Laporan Data Peserta - LPK Bina Mandiri</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @page { size: A4 portrait; margin: 20mm; }
@@ -26,14 +26,17 @@
         <div>
             <h1 class="text-3xl font-black tracking-widest uppercase text-[#201e1f]">LPK <span class="text-[#de5e2e]">BINA MANDIRI</span></h1>
             <p class="font-bold text-gray-700">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOPETENSI PENGELASAN</p>
-            <p class="text-xs text-gray-500 mt-1">Jl. KH. Hasyim Asy'ari Km. 03 Kalibeber, Mojotengah, Wonosobo, Jawa Tengah</p>
+            <p class="text-xs text-gray-500 mt-1">Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah</p>
         </div>
     </div>
 
     <div class="text-center mb-8">
         <h2 class="text-xl font-bold uppercase underline">Laporan Hasil Pelatihan Peserta</h2>
-        <p class="text-gray-600 mt-1">Filter Kelas: <strong>{{ $namaKelasFilter }}</strong></p>
-        <p class="text-gray-600">Tanggal Dicetak: {{ \Carbon\Carbon::now()->translatedFormat('d F Y - H:i') }}</p>
+        <div class="mt-2 text-sm text-gray-700 flex justify-center gap-6">
+            <p>Program: <strong>{{ $namaProgramFilter }}</strong></p>
+            <p>Kelas: <strong>{{ $namaKelasFilter }}</strong></p>
+        </div>
+        <p class="text-gray-500 text-xs mt-1">Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y - H:i') }}</p>
     </div>
 
     <table class="w-full border-collapse border border-gray-800 text-left text-xs">
@@ -42,10 +45,9 @@
                 <th class="border border-gray-800 py-2 px-2 text-center w-8">No</th>
                 <th class="border border-gray-800 py-2 px-2">Nama Peserta / NIK</th>
                 <th class="border border-gray-800 py-2 px-2">Program Pelatihan</th>
-                <th class="border border-gray-800 py-2 px-2">Instruktur</th>
+                <th class="border border-gray-800 py-2 px-2">Kelas</th>
                 <th class="border border-gray-800 py-2 px-2 text-center">Hadir</th>
-                <th class="border border-gray-800 py-2 px-2 text-center">Teori</th>
-                <th class="border border-gray-800 py-2 px-2 text-center">Praktik</th>
+                <th class="border border-gray-800 py-2 px-2 text-center">Rata-rata</th>
                 <th class="border border-gray-800 py-2 px-2 text-center">Status Lulus</th>
             </tr>
         </thead>
@@ -59,40 +61,40 @@
                     <div class="font-normal text-[10px] text-gray-500">{{ $item->peserta?->nik ?? '-' }}</div>
                 </td>
                 
-                <td class="border border-gray-800 py-2 px-2">
-                    {{ $item->kelas?->nama_kelas ?? 'Kelas Terhapus' }}
-                    <div class="text-[10px] text-gray-500">{{ $item->kelas?->programPelatihan?->nama_program ?? 'Program Terhapus' }}</div>
+                <td class="border border-gray-800 py-2 px-2 text-[11px] font-bold uppercase">
+                    {{ $item->kelas?->programPelatihan?->nama_program ?? 'Program Terhapus' }}
                 </td>
                 
-                <td class="border border-gray-800 py-2 px-2">{{ $item->kelas?->instruktur?->user?->name ?? '-' }}</td>
+                <td class="border border-gray-800 py-2 px-2">
+                    {{ $item->kelas?->nama_kelas ?? 'Kelas Terhapus' }}
+                </td>
                 
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->kehadiran }}%</td>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_teori }}</td>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->nilai_praktik }}</td>
+                <td class="border border-gray-800 py-2 px-2 text-center font-bold">{{ $item->kehadiran ?? 0 }}%</td>
+                <td class="border border-gray-800 py-2 px-2 text-center font-black">{{ $item->nilai_rata_rata ?? 0 }}</td>
                 <td class="border border-gray-800 py-2 px-2 text-center font-bold uppercase">
                     @if($item->status_kelulusan == 'lulus')
                         <span class="text-green-700">Lulus</span>
                     @elseif($item->status_kelulusan == 'tidak_lulus')
                         <span class="text-red-700">Gagal</span>
                     @else
-                        <span>Pending</span>
+                        <span class="text-yellow-700">Proses</span>
                     @endif
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="8" class="border border-gray-800 py-4 px-2 text-center italic">Tidak ada data yang tersedia untuk dicetak.</td>
+                <td colspan="7" class="border border-gray-800 py-4 px-2 text-center italic">Tidak ada data yang tersedia untuk dicetak berdasarkan filter.</td>
             </tr>
             @endforelse
         </tbody>
     </table>
 
     <div class="mt-12 flex justify-end">
-        <div class="text-center">
+        <div class="text-center w-64">
             <p>Wonosobo, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
             <p class="font-bold">Admin LPK Bina Mandiri</p>
             <div class="h-24"></div>
-            <p class="font-bold underline">{{ Auth::user()->name }}</p>
+            <p class="font-bold underline text-[#201e1f]">{{ Auth::user()->name }}</p>
         </div>
     </div>
 

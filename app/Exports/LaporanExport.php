@@ -3,79 +3,42 @@
 namespace App\Exports;
 
 use App\Models\Pendaftaran;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Contracts\View\View;
+use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class LaporanExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
+class LaporanExport implements FromView, ShouldAutoSize
 {
-    protected $kelas_id;
-    protected $status_kelulusan;
+    protected $request;
 
-    public function __construct($kelas_id, $status_kelulusan)
+    // Menangkap request filter dari Controller
+    public function __construct($request)
     {
-        $this->kelas_id = $kelas_id;
-        $this->status_kelulusan = $status_kelulusan;
+        $this->request = $request;
     }
 
-    public function collection()
+    public function view(): View
     {
         $query = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan', 'kelas.instruktur.user'])
                             ->where('status_pendaftaran', 'disetujui');
 
-        if ($this->kelas_id) {
-            $query->where('kelas_id', $this->kelas_id);
+        if ($this->request->filled('kelas_id')) {
+            $query->where('kelas_id', $this->request->kelas_id);
         }
-        if ($this->status_kelulusan) {
-            $query->where('status_kelulusan', $this->status_kelulusan);
+        
+        if ($this->request->filled('program_id')) {
+            $query->whereHas('kelas', function($q) {
+                $q->where('program_pelatihan_id', $this->request->program_id);
+            });
         }
 
-        return $query->latest()->get();
-    }
+        if ($this->request->filled('status_kelulusan')) {
+            $query->where('status_kelulusan', $this->request->status_kelulusan);
+        }
 
-    // Mengurutkan data ke dalam kolom Excel
-    public function map($pendaftaran): array
-    {
-        return [
-            $pendaftaran->peserta->user->name,
-            $pendaftaran->peserta->nik,
-            $pendaftaran->kelas->nama_kelas,
-            $pendaftaran->kelas->programPelatihan->nama_program,
-            $pendaftaran->kelas->instruktur->user->name ?? '-',
-            $pendaftaran->kehadiran . '%',
-            $pendaftaran->nilai_teori,
-            $pendaftaran->nilai_praktik,
-            strtoupper(str_replace('_', ' ', $pendaftaran->status_kelulusan))
-        ];
-    }
+        $laporan = $query->orderBy('kelas_id', 'asc')->get();
 
-    // Membuat Judul Header Kolom
-    public function headings(): array
-    {
-        return [
-            'NAMA PESERTA',
-            'NIK',
-            'KELAS',
-            'PROGRAM PELATIHAN',
-            'INSTRUKTUR',
-            'KEHADIRAN',
-            'NILAI TEORI',
-            'NILAI PRAKTIK',
-            'STATUS KELULUSAN'
-        ];
-    }
-
-    // Memberi Style pada baris Header (Baris 1)
-    public function styles(Worksheet $sheet)
-    {
-        return [
-            1 => [
-                'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']], 
-                'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FFDE5E2E']] // Warna Oranye Kita
-            ],
-        ];
+        // Mengarahkan ke file view khusus Excel
+        return view('admin.laporan.excel', compact('laporan'));
     }
 }

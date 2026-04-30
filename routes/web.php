@@ -79,6 +79,12 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/laporan/cetak', [\App\Http\Controllers\Admin\LaporanController::class, 'cetak'])->name('laporan.cetak');
     Route::get('/laporan/excel', [\App\Http\Controllers\Admin\LaporanController::class, 'excel'])->name('laporan.excel'); 
 
+    // Akademik & Kelulusan (Nilai & Sertifikat)
+    Route::get('/nilai', [App\Http\Controllers\Admin\AkademikController::class, 'nilaiIndex'])->name('nilai.index');
+    Route::get('/sertifikat', [App\Http\Controllers\Admin\AkademikController::class, 'sertifikatIndex'])->name('sertifikat.index');
+    Route::put('/sertifikat/{id}', [App\Http\Controllers\Admin\AkademikController::class, 'sertifikatUpdate'])->name('sertifikat.update');
+    Route::get('/sertifikat/{id}/cetak', [App\Http\Controllers\Admin\AkademikController::class, 'sertifikatCetak'])->name('sertifikat.cetak');
+    
     Route::get('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'index'])->name('pengaturan.index');
     Route::put('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'update'])->name('pengaturan.update');
 });

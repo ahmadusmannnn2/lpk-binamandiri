@@ -7,8 +7,9 @@
         $avatarUrl = asset('storage/' . Auth::user()->instruktur->foto);
     }
     
-    // Logika Menu Aktif untuk Data Master
+    // Logika Menu Aktif
     $isMasterActive = request()->routeIs('admin.program.*') || request()->routeIs('admin.instruktur.*') || request()->routeIs('admin.peserta.*') || request()->routeIs('admin.kelas.*');
+    $isAkademikActive = request()->routeIs('admin.nilai.*') || request()->routeIs('admin.sertifikat.*');
 @endphp
 
 <div x-data="{ sidebarOpen: false }">
@@ -76,6 +77,7 @@
                 <span class="font-bold">Dashboard Utama</span>
             </a>
 
+            <!-- DATA MASTER -->
             <div x-data="{ masterOpen: {{ $isMasterActive ? 'true' : 'false' }} }">
                 <button @click="masterOpen = !masterOpen" class="w-full flex items-center justify-between px-6 py-4 transition duration-200 border-l-4 {{ $isMasterActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
                     <div class="flex items-center">
@@ -101,11 +103,34 @@
                 </div>
             </div>
 
+            <!-- MENU VERIFIKASI (KEMBALI SEPERTI SEMULA) -->
             <a href="{{ route('admin.verifikasi.index') }}" class="flex items-center px-6 py-4 transition duration-200 border-l-4 {{ request()->routeIs('admin.verifikasi.*') ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
                 <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span class="font-bold">Verifikasi Pendaftar</span>
             </a>
 
+            <!-- AKADEMIK & KELULUSAN (MENU BARU) -->
+            <div x-data="{ akademikOpen: {{ $isAkademikActive ? 'true' : 'false' }} }">
+                <button @click="akademikOpen = !akademikOpen" class="w-full flex items-center justify-between px-6 py-4 transition duration-200 border-l-4 {{ $isAkademikActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        <span class="font-bold">Akademik & Lulusan</span>
+                    </div>
+                    <svg :class="{'rotate-180 text-oranye': akademikOpen}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                
+                <div x-show="akademikOpen" x-collapse class="bg-[#0a0a0a] py-2 border-y border-gray-800" style="display: {{ $isAkademikActive ? 'block' : 'none' }};">
+                    <!-- LINK SUDAH DIPERBAIKI MENGARAH KE ROUTE YANG BENAR -->
+                    <a href="{{ route('admin.nilai.index') }}" class="flex items-center pl-16 pr-6 py-3 text-sm transition {{ request()->routeIs('admin.nilai.*') ? 'text-oranye font-bold' : 'text-gray-300 hover:text-white hover:bg-gray-900' }}">
+                        <div class="w-1.5 h-1.5 rounded-full mr-3 {{ request()->routeIs('admin.nilai.*') ? 'bg-oranye shadow-[0_0_8px_rgba(222,94,46,0.8)]' : 'bg-gray-600' }}"></div> Rekap Nilai Peserta
+                    </a>
+                    <a href="{{ route('admin.sertifikat.index') }}" class="flex items-center pl-16 pr-6 py-3 text-sm transition {{ request()->routeIs('admin.sertifikat.*') ? 'text-oranye font-bold' : 'text-gray-300 hover:text-white hover:bg-gray-900' }}">
+                        <div class="w-1.5 h-1.5 rounded-full mr-3 {{ request()->routeIs('admin.sertifikat.*') ? 'bg-oranye shadow-[0_0_8px_rgba(222,94,46,0.8)]' : 'bg-gray-600' }}"></div> Cetak Sertifikat
+                    </a>
+                </div>
+            </div>
+
+            <!-- LAPORAN & PENGATURAN -->
             <a href="{{ route('admin.laporan.index') }}" class="flex items-center px-6 py-4 transition duration-200 border-l-4 {{ request()->routeIs('admin.laporan.*') ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
                 <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 <span class="font-bold">Laporan & Rekap</span>
@@ -128,7 +153,7 @@
                 @csrf
                 <button type="submit" onclick="return confirm('Apakah Anda yakin ingin keluar dari sistem keamanan LPK Bina Mandiri?');" 
                         class="w-full flex items-center justify-center px-4 py-3 transition duration-300 rounded-lg text-red-500 hover:text-white hover:bg-red-600 border border-red-500/30 hover:border-red-600 group font-bold shadow-sm">
-                    <svg class="w-5 h-5 mr-3 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <svg class="w-5 h-5 mr-3 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013-3v1"></path></svg>
                     <span>Keluar Sistem</span>
                 </button>
             </form>
