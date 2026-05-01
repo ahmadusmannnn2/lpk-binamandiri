@@ -3,99 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Data Peserta - LPK Bina Mandiri</title>
+    <title>Cetak Laporan Pendaftaran & Keuangan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @page { size: A4 portrait; margin: 20mm; }
         @media print {
+            body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .no-print { display: none !important; }
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
-        table { page-break-inside: auto; }
-        tr { page-break-inside: avoid; page-break-after: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px 12px; font-size: 12px; text-align: left; }
+        th { background-color: #f3f4f6; font-weight: bold; text-transform: uppercase; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
     </style>
 </head>
-<body class="bg-white text-gray-900 font-sans p-8 text-sm">
+<body class="bg-white text-gray-900 font-sans p-8 max-w-5xl mx-auto">
 
-    <div class="fixed top-5 right-5 space-x-4 no-print z-50">
-        <button onclick="window.close()" class="bg-gray-500 text-white px-4 py-2 rounded font-bold shadow hover:bg-gray-600">Tutup</button>
-        <button onclick="window.print()" class="bg-[#de5e2e] text-white px-6 py-2 rounded font-bold shadow hover:bg-[#c24b22]">🖨️ Cetak Dokumen</button>
+    <!-- Tombol Print (Sembunyi saat dicetak) -->
+    <div class="no-print flex justify-end mb-6">
+        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow transition">
+            🖨️ Cetak Dokumen Ini
+        </button>
     </div>
 
-    <div class="border-b-4 border-[#201e1f] pb-4 mb-6 flex justify-between items-center">
-        <div>
-            <h1 class="text-3xl font-black tracking-widest uppercase text-[#201e1f]">LPK <span class="text-[#de5e2e]">BINA MANDIRI</span></h1>
-            <p class="font-bold text-gray-700">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOPETENSI PENGELASAN</p>
-            <p class="text-xs text-gray-500 mt-1">Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah</p>
-        </div>
+    <!-- Kop Surat -->
+    @php
+        $nama1 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_1')->value('nilai') ?? 'LPK';
+        $nama2 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_2')->value('nilai') ?? 'BINA';
+        $alamat = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? '-';
+        $telepon = \App\Models\Pengaturan::where('kunci', 'kontak_telepon')->value('nilai') ?? '-';
+    @endphp
+    
+    <div class="border-b-4 border-gray-800 pb-4 mb-6 text-center">
+        <h1 class="text-3xl font-black uppercase">{{ $nama1 }} {{ $nama2 }}</h1>
+        <p class="text-sm mt-1">{{ $alamat }} | Telp: {{ $telepon }}</p>
     </div>
 
-    <div class="text-center mb-8">
-        <h2 class="text-xl font-bold uppercase underline">Laporan Hasil Pelatihan Peserta</h2>
-        <div class="mt-2 text-sm text-gray-700 flex justify-center gap-6">
-            <p>Program: <strong>{{ $namaProgramFilter }}</strong></p>
-            <p>Kelas: <strong>{{ $namaKelasFilter }}</strong></p>
-        </div>
-        <p class="text-gray-500 text-xs mt-1">Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y - H:i') }}</p>
-    </div>
-
-    <table class="w-full border-collapse border border-gray-800 text-left text-xs">
-        <thead class="bg-gray-200">
+    <!-- Judul Laporan -->
+    <div class="mb-6">
+        <h2 class="text-xl font-bold text-center underline mb-4">LAPORAN PENDAFTARAN & KEUANGAN</h2>
+        
+        <table style="width: auto; border: none; margin-top:0;">
             <tr>
-                <th class="border border-gray-800 py-2 px-2 text-center w-8">No</th>
-                <th class="border border-gray-800 py-2 px-2">Nama Peserta / NIK</th>
-                <th class="border border-gray-800 py-2 px-2">Program Pelatihan</th>
-                <th class="border border-gray-800 py-2 px-2">Kelas</th>
-                <th class="border border-gray-800 py-2 px-2 text-center">Hadir</th>
-                <th class="border border-gray-800 py-2 px-2 text-center">Rata-rata</th>
-                <th class="border border-gray-800 py-2 px-2 text-center">Status Lulus</th>
+                <td style="border:none; padding:2px; font-weight:bold; width: 120px;">Periode Tanggal</td>
+                <td style="border:none; padding:2px;">: {{ request('start_date') ? \Carbon\Carbon::parse(request('start_date'))->format('d M Y') : 'Awal' }} s.d {{ request('end_date') ? \Carbon\Carbon::parse(request('end_date'))->format('d M Y') : 'Akhir' }}</td>
+            </tr>
+            <tr>
+                <td style="border:none; padding:2px; font-weight:bold;">Status Filter</td>
+                <td style="border:none; padding:2px; text-transform:uppercase;">: {{ request('status') ?: 'Semua Status' }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Tabel Data -->
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30px;" class="text-center">No</th>
+                <th style="width: 80px;">Tgl Daftar</th>
+                <th>Nama Peserta</th>
+                <th>Program Pelatihan</th>
+                <th class="text-center">Nomor WA</th>
+                <th class="text-center">Status</th>
+                <th class="text-right">Nominal (Rp)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($laporan as $key => $item)
+            @foreach($laporan as $key => $item)
             <tr>
-                <td class="border border-gray-800 py-2 px-2 text-center">{{ $key + 1 }}</td>
-                
-                <td class="border border-gray-800 py-2 px-2 font-bold">
-                    {{ $item->peserta?->user?->name ?? 'Data Terhapus' }}
-                    <div class="font-normal text-[10px] text-gray-500">{{ $item->peserta?->nik ?? '-' }}</div>
+                <td class="text-center">{{ $key + 1 }}</td>
+                <td>{{ \Carbon\Carbon::parse($item->tanggal_daftar)->format('d/m/Y') }}</td>
+                <td>
+                    <b>{{ $item->peserta->user->name ?? '-' }}</b><br>
+                    <span style="font-size:10px; color:#555;">NIK: {{ $item->peserta->nik ?? '-' }}</span>
                 </td>
-                
-                <td class="border border-gray-800 py-2 px-2 text-[11px] font-bold uppercase">
-                    {{ $item->kelas?->programPelatihan?->nama_program ?? 'Program Terhapus' }}
+                <td>
+                    {{ $item->kelas->programPelatihan->nama_program ?? '-' }}<br>
+                    <span style="font-size:10px; color:#555;">{{ $item->kelas->nama_kelas ?? '-' }}</span>
                 </td>
-                
-                <td class="border border-gray-800 py-2 px-2">
-                    {{ $item->kelas?->nama_kelas ?? 'Kelas Terhapus' }}
+                <td class="text-center">{{ $item->peserta->nomor_telepon ?? '-' }}</td>
+                <td class="text-center uppercase" style="font-weight:bold; color: {{ $item->status_pembayaran == 'sukses' ? 'green' : ($item->status_pembayaran == 'pending' ? 'orange' : 'red') }}">
+                    {{ $item->status_pembayaran }}
                 </td>
-                
-                <td class="border border-gray-800 py-2 px-2 text-center font-bold">{{ $item->kehadiran ?? 0 }}%</td>
-                <td class="border border-gray-800 py-2 px-2 text-center font-black">{{ $item->nilai_rata_rata ?? 0 }}</td>
-                <td class="border border-gray-800 py-2 px-2 text-center font-bold uppercase">
-                    @if($item->status_kelulusan == 'lulus')
-                        <span class="text-green-700">Lulus</span>
-                    @elseif($item->status_kelulusan == 'tidak_lulus')
-                        <span class="text-red-700">Gagal</span>
-                    @else
-                        <span class="text-yellow-700">Proses</span>
-                    @endif
+                <td class="text-right">
+                    {{ number_format($item->kelas->programPelatihan->harga_pelatihan ?? 0, 0, ',', '.') }}
                 </td>
             </tr>
-            @empty
-            <tr>
-                <td colspan="7" class="border border-gray-800 py-4 px-2 text-center italic">Tidak ada data yang tersedia untuk dicetak berdasarkan filter.</td>
-            </tr>
-            @endforelse
+            @endforeach
         </tbody>
+        <tfoot>
+            <tr style="background-color: #f3f4f6;">
+                <td colspan="6" class="text-right" style="font-weight: 900; font-size: 14px;">TOTAL PEMASUKAN DARI STATUS LUNAS</td>
+                <td class="text-right" style="font-weight: 900; font-size: 14px; color: green;">
+                    Rp {{ number_format($totalPemasukan, 0, ',', '.') }}
+                </td>
+            </tr>
+        </tfoot>
     </table>
 
-    <div class="mt-12 flex justify-end">
-        <div class="text-center w-64">
-            <p>Wonosobo, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-            <p class="font-bold">Admin LPK Bina Mandiri</p>
-            <div class="h-24"></div>
-            <p class="font-bold underline text-[#201e1f]">{{ Auth::user()->name }}</p>
-        </div>
+    <!-- Tanda Tangan -->
+    <div style="margin-top: 50px; text-align: right;">
+        <p style="margin-bottom: 70px;">Wonosobo, {{ \Carbon\Carbon::now()->format('d F Y') }}<br>Mengetahui,</p>
+        <p style="font-weight: bold; text-decoration: underline;">Pimpinan / Bagian Keuangan</p>
     </div>
 
 </body>

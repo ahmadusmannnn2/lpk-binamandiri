@@ -1,144 +1,149 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-xl text-hitam leading-tight">{{ __('Laporan Data Akademik Peserta') }}</h2>
+        <h2 class="font-bold text-xl text-hitam leading-tight">
+            {{ __('Laporan Pendaftaran & Keuangan') }}
+        </h2>
     </x-slot>
 
     <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            <!-- Box Filter Cerdas -->
-            <div class="bg-white p-6 shadow-lg sm:rounded-2xl border-t-4 border-oranye relative overflow-hidden">
-                <div class="absolute -right-10 -top-10 opacity-5 pointer-events-none">
-                    <svg class="w-48 h-48" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+            <!-- KARTU RINGKASAN -->
+            <div class="mb-6 bg-white p-6 rounded-2xl shadow-sm border-t-4 border-oranye flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Pemasukan (Sesuai Filter)</h3>
+                    <p class="text-3xl font-black text-green-600 mt-1">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-400 mt-1">*Hanya menghitung pendaftaran dengan status Lunas (Sukses).</p>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <!-- Tombol Export membawa query string agar hasil cetaknya sesuai filter -->
+                    <a href="{{ route('admin.laporan.cetak', request()->query()) }}" target="_blank" class="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-xl font-bold hover:bg-red-100 transition border border-red-100 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Cetak PDF
+                    </a>
+                    <a href="{{ route('admin.laporan.excel', request()->query()) }}" class="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-green-50 text-green-700 px-4 py-3 rounded-xl font-bold hover:bg-green-100 transition border border-green-100 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Export Excel
+                    </a>
+                </div>
+            </div>
+
+            <!-- FILTER: COMPACT TOOLBAR -->
+            <form action="{{ route('admin.laporan.index') }}" method="GET" class="mb-5 bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 items-center">
+                
+                <!-- Tanggal Mulai -->
+                <div class="w-full md:w-1/6">
+                    <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm transition py-2" title="Tanggal Mulai">
                 </div>
                 
-                <h3 class="font-black text-hitam mb-4 text-lg">Filter Data Laporan</h3>
-                <form action="{{ route('admin.laporan.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end relative z-10">
-                    
-                    <div>
-                        <x-input-label for="program_id" :value="__('Program Pelatihan')" class="font-bold text-gray-700" />
-                        <select name="program_id" id="program_id" class="mt-1 block w-full rounded-xl border-gray-300 focus:border-oranye focus:ring-oranye shadow-sm text-sm font-medium">
-                            <option value="">Semua Program</option>
-                            @foreach($program as $p)
-                                <option value="{{ $p->id }}" {{ request('program_id') == $p->id ? 'selected' : '' }}>{{ $p->nama_program }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <x-input-label for="kelas_id" :value="__('Angkatan / Kelas')" class="font-bold text-gray-700" />
-                        <select name="kelas_id" id="kelas_id" class="mt-1 block w-full rounded-xl border-gray-300 focus:border-oranye focus:ring-oranye shadow-sm text-sm font-medium">
-                            <option value="">Semua Kelas</option>
-                            @foreach($kelas as $k)
-                                <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <x-input-label for="status_kelulusan" :value="__('Status Evaluasi')" class="font-bold text-gray-700" />
-                        <select name="status_kelulusan" id="status_kelulusan" class="mt-1 block w-full rounded-xl border-gray-300 focus:border-oranye focus:ring-oranye shadow-sm text-sm font-medium">
-                            <option value="">Semua Status</option>
-                            <option value="belum_dinilai" {{ request('status_kelulusan') == 'belum_dinilai' ? 'selected' : '' }}>Belum Dinilai / Proses</option>
-                            <option value="lulus" {{ request('status_kelulusan') == 'lulus' ? 'selected' : '' }}>Lulus</option>
-                            <option value="tidak_lulus" {{ request('status_kelulusan') == 'tidak_lulus' ? 'selected' : '' }}>Tidak Lulus (Gagal)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="flex gap-2">
-                        <button type="submit" class="bg-hitam text-white px-4 py-2.5 rounded-xl shadow-md hover:bg-oranye hover:shadow-lg transition transform hover:-translate-y-0.5 w-full font-bold flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                            Filter
-                        </button>
-                        @if(request()->anyFilled(['kelas_id', 'program_id', 'status_kelulusan']))
-                            <a href="{{ route('admin.laporan.index') }}" class="bg-gray-100 text-gray-600 border border-gray-300 px-4 py-2.5 rounded-xl shadow-sm hover:bg-gray-200 transition text-center font-bold" title="Reset Filter">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            </a>
-                        @endif
-                    </div>
-                </form>
-            </div>
-
-            <!-- Tabel Data -->
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-2xl border-t border-gray-100">
-                <div class="p-6">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-gray-100 pb-4">
-                        <h3 class="font-black text-hitam text-lg">Hasil Rekapitulasi Data <span class="text-oranye">({{ $laporan->count() }} Peserta)</span></h3>
-                        
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <!-- TOMBOL EXCEL DIKEMBALIKAN -->
-                            <a href="{{ route('admin.laporan.excel', request()->all()) }}" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-md transition transform hover:-translate-y-1 flex items-center justify-center gap-2 text-sm w-full md:w-auto">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                Export Excel
-                            </a>
-
-                            <!-- TOMBOL PDF -->
-                            <a href="{{ route('admin.laporan.cetak', request()->all()) }}" target="_blank" class="bg-hitam hover:bg-oranye text-white px-5 py-2.5 rounded-lg font-bold shadow-md transition transform hover:-translate-y-1 flex items-center justify-center gap-2 text-sm w-full md:w-auto">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                Cetak Laporan (PDF)
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full w-full text-left border-collapse border border-gray-200 rounded-xl overflow-hidden">
-                            <thead>
-                                <tr class="bg-gray-50 text-hitam uppercase text-[10px] sm:text-xs font-black tracking-wider">
-                                    <th class="py-4 px-4 border-b border-gray-200 text-center w-10">No</th>
-                                    <th class="py-4 px-4 border-b border-gray-200">Identitas Peserta</th>
-                                    <th class="py-4 px-4 border-b border-gray-200">Program & Kelas</th>
-                                    <th class="py-4 px-4 border-b border-gray-200 text-center">Hadir</th>
-                                    <th class="py-4 px-4 border-b border-gray-200 text-center">Nilai Rata-rata</th>
-                                    <th class="py-4 px-4 border-b border-gray-200 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-600 text-sm">
-                                @forelse($laporan as $key => $item)
-                                <tr class="hover:bg-orange-50/50 transition duration-150">
-                                    <td class="py-3 px-4 border-b border-gray-100 text-center font-bold">{{ $key + 1 }}</td>
-                                    
-                                    <td class="py-3 px-4 border-b border-gray-100">
-                                        <div class="font-bold text-hitam">{{ $item->peserta?->user?->name ?? 'Data Terhapus' }}</div>
-                                        <div class="text-xs text-gray-500 font-medium">NIK: {{ $item->peserta?->nik ?? '-' }}</div>
-                                    </td>
-                                    
-                                    <td class="py-3 px-4 border-b border-gray-100">
-                                        <div class="text-oranye font-bold uppercase tracking-wider text-[10px] mb-0.5">{{ $item->kelas?->programPelatihan?->nama_program ?? 'Program Terhapus' }}</div>
-                                        <div class="font-bold text-gray-700">{{ $item->kelas?->nama_kelas ?? 'Kelas Terhapus' }}</div>
-                                    </td>
-                                    
-                                    <td class="py-3 px-4 border-b border-gray-100 text-center font-bold text-gray-700">
-                                        <span class="{{ $item->kehadiran >= 80 ? 'text-green-600' : 'text-red-500' }}">{{ $item->kehadiran ?? 0 }}%</span>
-                                    </td>
-                                    
-                                    <td class="py-3 px-4 border-b border-gray-100 text-center font-black text-blue-700 text-base">
-                                        {{ $item->nilai_rata_rata ?? 0 }}
-                                    </td>
-                                    
-                                    <td class="py-3 px-4 border-b border-gray-100 text-center">
-                                        @if($item->status_kelulusan == 'lulus')
-                                            <span class="bg-green-100 text-green-700 border border-green-200 px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider shadow-sm">Lulus</span>
-                                        @elseif($item->status_kelulusan == 'tidak_lulus')
-                                            <span class="bg-red-100 text-red-700 border border-red-200 px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider shadow-sm">Gagal</span>
-                                        @else
-                                            <span class="bg-gray-100 text-gray-600 border border-gray-200 px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider shadow-sm">Proses</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="7" class="py-12 px-4 text-center">
-                                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                        <p class="text-gray-400 font-medium">Tidak ada data laporan yang cocok dengan filter pencarian.</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                <!-- Tanggal Selesai -->
+                <div class="w-full md:w-1/6">
+                    <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm transition py-2" title="Tanggal Selesai">
                 </div>
-            </div>
+                
+                <!-- Filter Status -->
+                <div class="w-full md:w-1/4">
+                    <select name="status" class="w-full border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm cursor-pointer transition py-2">
+                        <option value="">Semua Status Pembayaran</option>
+                        <option value="sukses" {{ request('status') == 'sukses' ? 'selected' : '' }}>🟢 Lunas</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>🟡 Pending</option>
+                        <option value="batal" {{ request('status') == 'batal' ? 'selected' : '' }}>🔴 Batal</option>
+                    </select>
+                </div>
+                
+                <!-- Filter Program -->
+                <div class="w-full md:w-1/4">
+                    <select name="program" class="w-full border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm cursor-pointer transition py-2">
+                        <option value="">Semua Program Pelatihan</option>
+                        @foreach($programs as $prog)
+                            <option value="{{ $prog->id }}" {{ request('program') == $prog->id ? 'selected' : '' }}>{{ \Illuminate\Support\Str::limit($prog->nama_program, 20) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <!-- Tombol Aksi -->
+                <div class="w-full md:w-auto flex flex-1 gap-2 justify-end">
+                    <button type="submit" class="w-full md:w-auto bg-hitam text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition shadow">
+                        Filter
+                    </button>
+                    @if(request()->hasAny(['start_date', 'end_date', 'status', 'program']) && (request('start_date') != '' || request('end_date') != '' || request('status') != '' || request('program') != ''))
+                        <a href="{{ route('admin.laporan.index') }}" title="Reset Filter" class="flex items-center justify-center px-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-100 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </a>
+                    @endif
+                </div>
 
+            </form>
+
+            <!-- TABEL UTAMA -->
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-2xl border-t-4 border-hitam">
+                <div class="p-6 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs font-black tracking-wider border-b-2 border-gray-200">
+                                <th class="py-4 px-4 rounded-tl-lg">Tgl Daftar</th>
+                                <th class="py-4 px-4">Identitas Peserta</th>
+                                <th class="py-4 px-4">Program & Kelas</th>
+                                <th class="py-4 px-4 text-center">Status & Metode</th>
+                                <th class="py-4 px-4 text-right rounded-tr-lg">Nominal (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600 text-sm divide-y divide-gray-100">
+                            @forelse($laporan as $item)
+                            <tr class="hover:bg-orange-50/50 transition">
+                                <td class="py-4 px-4 font-medium text-gray-700">
+                                    {{ \Carbon\Carbon::parse($item->tanggal_daftar)->format('d/m/Y') }}
+                                </td>
+                                
+                                <td class="py-4 px-4">
+                                    <div class="font-bold text-hitam">{{ $item->peserta->user->name ?? '-' }}</div>
+                                    <div class="text-[11px] text-gray-500 mt-0.5">NIK: {{ $item->peserta->nik ?? '-' }}</div>
+                                    <div class="text-[11px] text-blue-600 font-bold mt-0.5">WA: {{ $item->peserta->nomor_telepon ?? '-' }}</div>
+                                </td>
+                                
+                                <td class="py-4 px-4">
+                                    <div class="font-bold text-oranye">{{ $item->kelas->programPelatihan->nama_program ?? '-' }}</div>
+                                    <div class="text-[11px] text-gray-500">{{ $item->kelas->nama_kelas ?? '-' }}</div>
+                                </td>
+                                
+                                <td class="py-4 px-4 text-center">
+                                    @if($item->status_pembayaran == 'sukses')
+                                        <span class="bg-green-100 text-green-800 py-1 px-3 rounded-full text-[10px] font-bold shadow-sm uppercase border border-green-200">Lunas</span>
+                                    @elseif($item->status_pembayaran == 'pending')
+                                        <span class="bg-yellow-100 text-yellow-800 py-1 px-3 rounded-full text-[10px] font-bold shadow-sm uppercase border border-yellow-200">Pending</span>
+                                    @else
+                                        <span class="bg-red-100 text-red-800 py-1 px-3 rounded-full text-[10px] font-bold shadow-sm uppercase">Batal</span>
+                                    @endif
+                                    <div class="text-[10px] text-gray-500 font-bold uppercase mt-1">
+                                        {{ $item->metode_pembayaran ?? 'Otomatis' }}
+                                    </div>
+                                </td>
+
+                                <td class="py-4 px-4 text-right font-black text-gray-800">
+                                    {{ number_format($item->kelas->programPelatihan->harga_pelatihan ?? 0, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="py-16 text-center text-gray-400">
+                                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span class="block italic font-medium">Tidak ada data pendaftaran dalam rentang waktu atau filter ini.</span>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Link Pagination -->
+                @if($laporan->hasPages())
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                        {{ $laporan->links() }}
+                    </div>
+                @endif
+                
+            </div>
+            
         </div>
     </div>
 </x-app-layout>

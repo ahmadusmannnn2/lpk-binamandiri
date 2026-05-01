@@ -5,69 +5,81 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pendaftaran;
 use App\Models\ProgramPelatihan;
-use App\Models\Kelas;
 use Illuminate\Http\Request;
 
 class LaporanController extends Controller
 {
+    // --- FUNGSI PINTAR UNTUK MENGAMBIL DATA FILTER ---
+    private function filterData(Request $request)
+    {
+        $query = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan'])
+            ->orderBy('tanggal_daftar', 'desc');
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_daftar', [$request->start_date, $request->end_date]);
+        } elseif ($request->filled('start_date')) {
+            $query->whereDate('tanggal_daftar', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->whereDate('tanggal_daftar', '<=', $request->end_date);
+        }
+
+        $query->when($request->program, function ($q, $program) {
+            $q->whereHas('kelas', function ($kelasQ) use ($program) {
+                $kelasQ->where('program_pelatihan_id', $program);
+            });
+        });
+
+        $query->when($request->status, function ($q, $status) {
+            $q->where('status_pembayaran', $status);
+        });
+
+        return $query;
+    }
+
+    // 1. HALAMAN UTAMA LAPORAN
     public function index(Request $request)
     {
-        $program = ProgramPelatihan::all();
-        $kelas = Kelas::latest()->get();
+        $programs = ProgramPelatihan::all();
+        $query = $this->filterData($request);
+
+        $laporan = $query->paginate(15)->withQueryString();
         
-        // Query dasar: Hanya ambil peserta yang sudah disetujui (valid)
-        $query = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan', 'kelas.instruktur.user'])
-                            ->where('status_pendaftaran', 'disetujui');
-
-        // Filter by Kelas
-        if ($request->filled('kelas_id')) {
-            $query->where('kelas_id', $request->kelas_id);
-        }
-
-        // Filter by Program
-        if ($request->filled('program_id')) {
-            $query->whereHas('kelas', function($q) use ($request) {
-                $q->where('program_pelatihan_id', $request->program_id);
+        $totalPemasukan = (clone $query)->where('status_pembayaran', 'sukses')
+            ->get()->sum(function($item) {
+                return $item->kelas->programPelatihan->harga_pelatihan ?? 0;
             });
-        }
 
-        // Filter by Status Kelulusan
-        if ($request->filled('status_kelulusan')) {
-            $query->where('status_kelulusan', $request->status_kelulusan);
-        }
-
-        $laporan = $query->latest()->get();
-
-        return view('admin.laporan.index', compact('laporan', 'program', 'kelas'));
+        return view('admin.laporan.index', compact('laporan', 'programs', 'totalPemasukan'));
     }
 
+    // 2. FITUR CETAK PDF / HTML
     public function cetak(Request $request)
     {
-        $query = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan', 'kelas.instruktur.user'])
-                            ->where('status_pendaftaran', 'disetujui');
-
-        if ($request->filled('kelas_id')) $query->where('kelas_id', $request->kelas_id);
+        $query = $this->filterData($request);
         
-        if ($request->filled('program_id')) {
-            $query->whereHas('kelas', function($q) use ($request) {
-                $q->where('program_pelatihan_id', $request->program_id);
+        // Ambil SEMUA data yang sesuai filter (tanpa pagination)
+        $laporan = $query->get(); 
+        
+        $totalPemasukan = (clone $query)->where('status_pembayaran', 'sukses')
+            ->get()->sum(function($item) {
+                return $item->kelas->programPelatihan->harga_pelatihan ?? 0;
             });
-        }
 
-        if ($request->filled('status_kelulusan')) $query->where('status_kelulusan', $request->status_kelulusan);
-
-        $laporan = $query->orderBy('kelas_id', 'asc')->get();
-        
-        // Parameter untuk Header Cetak PDF
-        $namaKelasFilter = $request->filled('kelas_id') ? Kelas::find($request->kelas_id)->nama_kelas : 'Semua Kelas';
-        $namaProgramFilter = $request->filled('program_id') ? ProgramPelatihan::find($request->program_id)->nama_program : 'Semua Program';
-
-        return view('admin.laporan.cetak', compact('laporan', 'namaKelasFilter', 'namaProgramFilter'));
+        return view('admin.laporan.cetak', compact('laporan', 'totalPemasukan'));
     }
+
+    // 3. FITUR EXPORT EXCEL (Tanpa Plugin Tambahan)
     public function excel(Request $request)
     {
-        // Pastikan Anda sudah mengimport facade Excel di atas (use Maatwebsite\Excel\Facades\Excel;)
-        // Atau panggil langsung seperti di bawah ini:
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\LaporanExport($request), 'Laporan_Peserta_LPK_Bina_Mandiri.xlsx');
+        $query = $this->filterData($request);
+        $laporan = $query->get(); 
+        $totalPemasukan = (clone $query)->where('status_pembayaran', 'sukses')
+            ->get()->sum(function($item) {
+                return $item->kelas->programPelatihan->harga_pelatihan ?? 0;
+            });
+
+        return response(view('admin.laporan.excel', compact('laporan', 'totalPemasukan')))
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="Laporan_Pendaftaran_LPK.xls"');
     }
 }

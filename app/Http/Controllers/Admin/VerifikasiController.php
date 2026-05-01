@@ -8,52 +8,62 @@ use Illuminate\Http\Request;
 
 class VerifikasiController extends Controller
 {
-    // 1. Menampilkan Daftar Biodata Peserta yang Perlu Diverifikasi
-    public function index()
+    // 1. Tampilkan Daftar Peserta dengan Filter & Pencarian
+    public function index(Request $request)
     {
-        // Ambil peserta yang status biodatanya sedang 'menunggu'
-        $pesertaMenunggu = Peserta::with('user')
-            ->where('status_biodata', 'menunggu')
-            ->latest()
-            ->get();
-        
-        // Ambil riwayat verifikasi (yang sudah disetujui/ditolak)
-        $pesertaRiwayat = Peserta::with('user')
-            ->whereIn('status_biodata', ['disetujui', 'ditolak'])
-            ->latest()
-            ->get();
+        // Mulai Query Dasar: Hanya ambil yang sudah mengisi biodata minimal (bukan 'belum_isi')
+        $query = Peserta::with('user')
+            ->where('status_biodata', '!=', 'belum_isi')
+            ->orderByRaw("FIELD(status_biodata, 'menunggu', 'ditolak', 'disetujui')") // Prioritaskan yang menunggu di atas
+            ->orderBy('updated_at', 'desc');
 
-        return view('admin.verifikasi.index', compact('pesertaMenunggu', 'pesertaRiwayat'));
+        // --- LOGIKA PENCARIAN (SEARCH) ---
+        $query->when($request->search, function ($q, $search) {
+            $q->where(function ($subQ) use ($search) {
+                $subQ->where('nik', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($userQ) use ($search) {
+                        $userQ->where('name', 'like', '%' . $search . '%')
+                              ->orWhere('email', 'like', '%' . $search . '%');
+                    });
+            });
+        });
+
+        // --- LOGIKA FILTER STATUS BIODATA ---
+        $query->when($request->status, function ($q, $status) {
+            $q->where('status_biodata', $status);
+        });
+
+        // Eksekusi Query dengan Pagination (15 data per halaman)
+        $peserta = $query->paginate(15)->withQueryString();
+
+        return view('admin.verifikasi.index', compact('peserta'));
     }
 
-    // 2. Menampilkan Detail Berkas (KTP, Ijazah, dll) untuk ditinjau
+    // 2. Tampilkan Detail Biodata
     public function show($id)
     {
         $peserta = Peserta::with('user')->findOrFail($id);
         return view('admin.verifikasi.show', compact('peserta'));
     }
 
-    // 3. Memproses Keputusan (Setuju / Tolak)
+    // 3. Update Status Biodata
     public function update(Request $request, $id)
     {
         $request->validate([
             'status_biodata' => 'required|in:disetujui,ditolak',
-            'catatan_biodata' => 'required_if:status_biodata,ditolak', // Wajib diisi jika Admin menolak
+            'catatan_biodata' => 'nullable|string'
         ]);
 
         $peserta = Peserta::findOrFail($id);
-
         $peserta->update([
             'status_biodata' => $request->status_biodata,
-            // Jika ditolak simpan pesannya, jika disetujui kosongkan
-            'catatan_biodata' => $request->status_biodata == 'ditolak' ? $request->catatan_biodata : null, 
+            'catatan_biodata' => $request->status_biodata === 'ditolak' ? $request->catatan_biodata : null,
         ]);
 
-        $pesan = $request->status_biodata == 'disetujui' 
-            ? 'Biodata peserta berhasil disetujui! Peserta sekarang dapat mendaftar kelas.' 
-            : 'Biodata peserta ditolak. Peserta telah diminta untuk memperbaiki datanya.';
+        $pesan = $request->status_biodata === 'disetujui' 
+            ? 'Biodata peserta berhasil disetujui!' 
+            : 'Biodata peserta ditolak dan dikembalikan untuk diperbaiki.';
 
-        // UBAH BARIS INI:
         return redirect()->route('admin.verifikasi.index')->with('success', $pesan);
     }
 }

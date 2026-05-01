@@ -11,11 +11,40 @@ use Illuminate\Http\Request;
 
 class KelasController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Canggih: Mengambil data Kelas sekaligus memanggil relasi Program, Instruktur, dan nama User Instruktur (Eager Loading)
-        $kelas = Kelas::with(['programPelatihan', 'instruktur.user'])->latest()->get();
-        return view('admin.kelas.index', compact('kelas'));
+        // Ambil data program untuk dropdown filter
+        $programs = ProgramPelatihan::all();
+
+        // Mulai Query Dasar (beserta relasi dan jumlah pendaftar yang disetujui)
+        $query = Kelas::with(['programPelatihan', 'instruktur.user'])
+            ->withCount(['pendaftaran' => function($q) {
+                $q->where('status_pendaftaran', 'disetujui');
+            }])
+            ->orderBy('created_at', 'desc');
+
+        // --- LOGIKA PENCARIAN (SEARCH) ---
+        $query->when($request->search, function ($q, $search) {
+            $q->where('nama_kelas', 'like', '%' . $search . '%')
+              ->orWhereHas('instruktur.user', function ($instrukturQ) use ($search) {
+                  $instrukturQ->where('name', 'like', '%' . $search . '%');
+              });
+        });
+
+        // --- LOGIKA FILTER STATUS KELAS ---
+        $query->when($request->status, function ($q, $status) {
+            $q->where('status_kelas', $status);
+        });
+
+        // --- LOGIKA FILTER PROGRAM PELATIHAN ---
+        $query->when($request->program, function ($q, $program) {
+            $q->where('program_pelatihan_id', $program);
+        });
+
+        // Eksekusi Query dengan Pagination (15 data per halaman)
+        $kelas = $query->paginate(15)->withQueryString();
+
+        return view('admin.kelas.index', compact('kelas', 'programs'));
     }
 
     public function create()

@@ -22,6 +22,11 @@
     // Menu Verifikasi Aktif
     $isVerifikasiBiodataActive = request()->routeIs('admin.verifikasi.*');
     $isVerifikasiPembayaranActive = request()->routeIs('admin.verifikasi_pembayaran.*');
+
+    // --- LOGIKA NOTIFIKASI CERDAS CERDAS ---
+    // Menghitung otomatis jika ada biodata atau pembayaran baru yang menunggu
+    $pendingBiodata = \App\Models\Peserta::where('status_biodata', 'menunggu')->count();
+    $pendingPembayaran = \App\Models\Pendaftaran::where('status_pembayaran', 'pending')->count();
 @endphp
 
 <div x-data="{ sidebarOpen: false }">
@@ -121,15 +126,33 @@
             </div>
 
             <!-- MENU VERIFIKASI BIODATA -->
-            <a href="{{ route('admin.verifikasi.index') }}" class="flex items-center px-6 py-4 transition duration-200 border-l-4 {{ $isVerifikasiBiodataActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
-                <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                <span class="font-bold">Verifikasi Biodata</span>
+            <a href="{{ route('admin.verifikasi.index') }}" class="flex items-center justify-between px-6 py-4 transition duration-200 border-l-4 {{ $isVerifikasiBiodataActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="font-bold">Verifikasi Biodata</span>
+                </div>
+                <!-- Notifikasi Berkedip -->
+                @if($pendingBiodata > 0)
+                    <span class="relative flex h-5 w-5 justify-center items-center">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-5 w-5 bg-red-600 text-white text-[10px] font-bold items-center justify-center">{{ $pendingBiodata }}</span>
+                    </span>
+                @endif
             </a>
 
-            <!-- MENU VERIFIKASI PEMBAYARAN (BARU) -->
-            <a href="{{ route('admin.verifikasi_pembayaran.index') }}" class="flex items-center px-6 py-4 transition duration-200 border-l-4 {{ $isVerifikasiPembayaranActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
-                <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                <span class="font-bold">Data Pembayaran</span>
+            <!-- MENU VERIFIKASI PEMBAYARAN -->
+            <a href="{{ route('admin.verifikasi_pembayaran.index') }}" class="flex items-center justify-between px-6 py-4 transition duration-200 border-l-4 {{ $isVerifikasiPembayaranActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span class="font-bold">Data Pembayaran</span>
+                </div>
+                <!-- Notifikasi Berkedip -->
+                @if($pendingPembayaran > 0)
+                    <span class="relative flex h-5 w-5 justify-center items-center">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-5 w-5 bg-red-600 text-white text-[10px] font-bold items-center justify-center">{{ $pendingPembayaran }}</span>
+                    </span>
+                @endif
             </a>
 
             <!-- AKADEMIK & KELULUSAN -->

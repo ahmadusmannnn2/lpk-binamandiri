@@ -9,15 +9,46 @@ use Illuminate\Http\Request;
 class AkademikController extends Controller
 {
     // 1. MENU REKAP NILAI KESELURUHAN
-    public function nilaiIndex()
+    // 1. Tampilkan Daftar Peserta untuk Input Nilai (Dengan Search & Filter)
+    public function nilaiIndex(Request $request)
     {
-        // Ambil data peserta yang status kelulusannya sudah dinilai (Lulus/Gagal)
-        $pendaftaran = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan', 'kelas.instruktur.user'])
-            ->whereIn('status_kelulusan', ['lulus', 'tidak_lulus'])
-            ->latest()
+        // Ambil daftar kelas untuk dropdown filter (Fokus ke kelas berjalan & selesai)
+        $kelasOptions = \App\Models\Kelas::with('programPelatihan')
+            ->whereIn('status_kelas', ['berjalan', 'selesai'])
+            ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.nilai.index', compact('pendaftaran'));
+        // Mulai Query Dasar: Hanya tampilkan peserta yang pendaftarannya sudah Disetujui
+        $query = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan'])
+            ->where('status_pendaftaran', 'disetujui')
+            ->orderBy('updated_at', 'desc');
+
+        // --- LOGIKA PENCARIAN (SEARCH) ---
+        $query->when($request->search, function ($q, $search) {
+            $q->where(function ($subQ) use ($search) {
+                $subQ->whereHas('peserta.user', function ($uQ) use ($search) {
+                    $uQ->where('name', 'like', '%' . $search . '%');
+                })->orWhereHas('peserta', function ($pQ) use ($search) {
+                    $pQ->where('nik', 'like', '%' . $search . '%');
+                });
+            });
+        });
+
+        // --- LOGIKA FILTER KELAS / ANGKATAN ---
+        $query->when($request->kelas, function ($q, $kelas) {
+            $q->where('kelas_id', $kelas);
+        });
+
+        // --- LOGIKA FILTER STATUS KELULUSAN ---
+        $query->when($request->status, function ($q, $status) {
+            $q->where('status_kelulusan', $status);
+        });
+
+        // Eksekusi Query dengan Pagination (15 data per halaman)
+        $pendaftaran = $query->paginate(15)->withQueryString();
+
+        // Catatan: Sesuaikan nama view-nya jika folder Anda bernama 'akademik' (misal: 'admin.akademik.nilai')
+        return view('admin.nilai.index', compact('pendaftaran', 'kelasOptions'));
     }
 
     // 2. MENU KELOLA SERTIFIKAT

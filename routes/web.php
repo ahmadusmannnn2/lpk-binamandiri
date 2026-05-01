@@ -80,6 +80,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     
     Route::get('/verifikasi-pembayaran/{id}/kelola', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'show'])->name('verifikasi_pembayaran.show');
     
+    // TAMBAHKAN BARIS INI TEPAT DI SINI:
+    Route::get('/verifikasi-pembayaran/cetak-semua', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'cetakSemua'])->name('verifikasi_pembayaran.cetak_semua');
+    
     Route::put('/verifikasi-pembayaran/{id}', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'update'])->name('verifikasi_pembayaran.update');
     Route::get('/verifikasi-pembayaran/{id}/cetak-kwitansi', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'cetakKwitansi'])->name('verifikasi_pembayaran.cetak_kwitansi');
 
