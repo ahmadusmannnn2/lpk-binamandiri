@@ -8,18 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Pastikan di sini tulisannya 'pendaftaran'
         Schema::table('pendaftaran', function (Blueprint $table) {
-            $table->string('status_pembayaran')->default('pending')->after('status_pendaftaran');
-            $table->string('snap_token')->nullable()->after('status_pembayaran');
+            $table->string('metode_pembayaran')->nullable()->after('status_pembayaran');
+            $table->dateTime('waktu_pembayaran')->nullable()->after('metode_pembayaran');
         });
     }
 
     public function down(): void
     {
-        // Pastikan di sini juga 'pendaftaran'
         Schema::table('pendaftaran', function (Blueprint $table) {
-            $table->dropColumn(['status_pembayaran', 'snap_token']);
+            $table->dropColumn(['metode_pembayaran', 'waktu_pembayaran']);
         });
     }
 };

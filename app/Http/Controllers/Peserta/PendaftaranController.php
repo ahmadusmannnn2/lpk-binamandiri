@@ -5,19 +5,43 @@ namespace App\Http\Controllers\Peserta;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Pendaftaran;
-use App\Models\ProgramPelatihan; // Pastikan ini di-import
+use App\Models\ProgramPelatihan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PendaftaranController extends Controller
 {
+    // Fungsi Bantuan Pribadi (Gembok Sakti) untuk mengecek status biodata
+    private function cekStatusBiodata()
+    {
+        $peserta = Auth::user()->peserta;
+
+        if (!$peserta || $peserta->status_biodata !== 'disetujui') {
+            // Tentukan pesan spesifik berdasarkan status
+            if ($peserta && $peserta->status_biodata === 'menunggu') {
+                $pesan = 'Sabar ya! Biodata Anda sedang diverifikasi oleh Admin. Anda bisa mendaftar kelas setelah disetujui.';
+            } elseif ($peserta && $peserta->status_biodata === 'ditolak') {
+                $pesan = 'Biodata Anda ditolak oleh Admin. Silakan perbaiki data Anda terlebih dahulu untuk bisa mendaftar kelas.';
+            } else {
+                $pesan = 'Silakan lengkapi biodata dan berkas Anda terlebih dahulu sebelum mendaftar kelas.';
+            }
+
+            return redirect()->route('peserta.biodata.index')->with('error', $pesan);
+        }
+
+        return null; // Lolos pengecekan
+    }
+
+
     // TAHAP 1: Menampilkan Daftar Program Pelatihan
     public function index()
     {
-        // Ambil semua program pelatihan (bisa ditambahkan paginate jika datanya banyak)
+        // 🔒 CEK GEMBOK SAKTI
+        $gembok = $this->cekStatusBiodata();
+        if ($gembok) return $gembok;
+
         $programs = ProgramPelatihan::all();
         
-        // Cek status pendaftaran peserta (opsional, untuk notifikasi di atas form)
         $peserta = Auth::user()->peserta;
         $pendaftaranAktif = null;
         if ($peserta) {
@@ -32,9 +56,12 @@ class PendaftaranController extends Controller
     // TAHAP 2: Menampilkan Detail Program & Daftar Angkatan/Kelas
     public function showProgram($program_id)
     {
+        // 🔒 CEK GEMBOK SAKTI (Mencegah user iseng ketik URL manual)
+        $gembok = $this->cekStatusBiodata();
+        if ($gembok) return $gembok;
+
         $program = ProgramPelatihan::findOrFail($program_id);
         
-        // Perbaikan: Ubah program_id menjadi program_pelatihan_id
         $kelas = Kelas::with('instruktur.user')
                     ->where('program_pelatihan_id', $program_id) 
                     ->where('status_kelas', 'menunggu') 
@@ -45,42 +72,108 @@ class PendaftaranController extends Controller
         return view('peserta.pendaftaran.show_program', compact('program', 'kelas', 'peserta'));
     }
 
+    // TAHAP 3: Menampilkan halaman konfirmasi pendaftaran
     public function create($kelas_id)
     {
-        $kelas = Kelas::with('programPelatihan')->findOrFail($kelas_id);
-        $peserta = Auth::user()->peserta;
+        // 🔒 CEK GEMBOK SAKTI
+        $gembok = $this->cekStatusBiodata();
+        if ($gembok) return $gembok;
 
-        // Cek apakah sudah pernah daftar di kelas ini
+        $peserta = Auth::user()->peserta;
+        $kelas = Kelas::with('programPelatihan')->findOrFail($kelas_id);
+
+        // CEK APAKAH SUDAH PERNAH DAFTAR KELAS INI
         $sudahDaftar = Pendaftaran::where('peserta_id', $peserta->id)
-                                  ->where('kelas_id', $kelas_id)
-                                  ->exists();
-        
+            ->where('kelas_id', $kelas->id)
+            ->first();
+
         if ($sudahDaftar) {
-            return redirect()->route('peserta.pendaftaran.index')->with('error', 'Anda sudah mendaftar di kelas ini.');
+            if ($sudahDaftar->status_pembayaran == 'pending') {
+                return redirect()->route('peserta.pembayaran.bayar', $sudahDaftar->id)
+                    ->with('info', 'Anda memiliki tagihan yang belum dibayar untuk kelas ini.');
+            }
+            return redirect()->route('peserta.dashboard')
+                ->with('error', 'Anda sudah terdaftar dan lunas di kelas ini.');
         }
 
         return view('peserta.pendaftaran.create', compact('kelas'));
     }
 
+    // PROSES SIMPAN PENDAFTARAN LALU LEMPAR KE MIDTRANS
     public function store(Request $request, $kelas_id)
     {
-        $request->validate([
-            'bukti_pembayaran' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+        // 🔒 CEK GEMBOK SAKTI
+        $gembok = $this->cekStatusBiodata();
+        if ($gembok) return $gembok;
 
         $peserta = Auth::user()->peserta;
+        $kelas = Kelas::findOrFail($kelas_id);
 
-        // Upload Bukti
-        $buktiPath = $request->file('bukti_pembayaran')->store('bukti_pembayaran', 'public');
+        $sudahDaftar = Pendaftaran::where('peserta_id', $peserta->id)
+            ->where('kelas_id', $kelas->id)
+            ->first();
 
-        Pendaftaran::create([
+        if ($sudahDaftar) {
+            return redirect()->route('peserta.pembayaran.bayar', $sudahDaftar->id);
+        }
+
+        $pendaftaran = Pendaftaran::create([
             'peserta_id' => $peserta->id,
-            'kelas_id' => $kelas_id,
+            'kelas_id' => $kelas->id,
             'tanggal_daftar' => now(),
-            'bukti_pembayaran' => $buktiPath,
-            'status_pendaftaran' => 'menunggu_verifikasi',
+            'status_pendaftaran' => 'menunggu_verifikasi', // Status otomatis berubah nanti setelah bayar
+            'status_pembayaran' => 'pending', 
         ]);
 
-        return redirect()->route('peserta.pendaftaran.index')->with('success', 'Pendaftaran berhasil! Menunggu verifikasi Admin.');
+        return redirect()->route('peserta.pembayaran.bayar', $pendaftaran->id);
+    }
+    // FITUR BARU: Menampilkan Riwayat Pendaftaran & Pembayaran Peserta
+    public function riwayat()
+    {
+        $peserta = Auth::user()->peserta;
+
+        // Jika belum punya data peserta, lempar ke biodata
+        if (!$peserta) {
+            return redirect()->route('peserta.biodata.index')->with('error', 'Silakan lengkapi biodata terlebih dahulu.');
+        }
+
+        // Ambil semua riwayat dari yang terbaru
+        $riwayat = Pendaftaran::with(['kelas.programPelatihan'])
+            ->where('peserta_id', $peserta->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('peserta.riwayat.index', compact('riwayat'));
+    }
+    // Menampilkan Detail Riwayat Peserta
+    public function showRiwayat($id)
+    {
+        $peserta = Auth::user()->peserta;
+
+        // Ambil data pendaftaran (Hanya milik peserta yang sedang login!)
+        $pendaftaran = Pendaftaran::with(['kelas.programPelatihan'])
+            ->where('id', $id)
+            ->where('peserta_id', $peserta->id)
+            ->firstOrFail();
+
+        return view('peserta.riwayat.show', compact('pendaftaran'));
+    }
+
+    // Mencetak Kwitansi Peserta
+    public function cetakKwitansi($id)
+    {
+        $peserta = Auth::user()->peserta;
+
+        // Ambil data (Keamanan ekstra: pastikan ini milik peserta yang login)
+        $pendaftaran = Pendaftaran::with(['kelas.programPelatihan', 'peserta.user'])
+            ->where('id', $id)
+            ->where('peserta_id', $peserta->id)
+            ->firstOrFail();
+
+        if ($pendaftaran->status_pembayaran != 'sukses') {
+            return back()->with('error', 'Kwitansi belum dapat dicetak karena tagihan belum lunas.');
+        }
+
+        return view('peserta.riwayat.cetak', compact('pendaftaran'));
     }
 }

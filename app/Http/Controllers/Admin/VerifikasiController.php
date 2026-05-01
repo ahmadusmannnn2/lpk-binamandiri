@@ -3,39 +3,57 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pendaftaran;
+use App\Models\Peserta;
 use Illuminate\Http\Request;
 
 class VerifikasiController extends Controller
 {
+    // 1. Menampilkan Daftar Biodata Peserta yang Perlu Diverifikasi
     public function index()
     {
-        // Mengambil semua data pendaftaran lengkap dengan relasinya
-        $pendaftaran = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan'])->latest()->get();
-        return view('admin.verifikasi.index', compact('pendaftaran'));
+        // Ambil peserta yang status biodatanya sedang 'menunggu'
+        $pesertaMenunggu = Peserta::with('user')
+            ->where('status_biodata', 'menunggu')
+            ->latest()
+            ->get();
+        
+        // Ambil riwayat verifikasi (yang sudah disetujui/ditolak)
+        $pesertaRiwayat = Peserta::with('user')
+            ->whereIn('status_biodata', ['disetujui', 'ditolak'])
+            ->latest()
+            ->get();
+
+        return view('admin.verifikasi.index', compact('pesertaMenunggu', 'pesertaRiwayat'));
     }
 
+    // 2. Menampilkan Detail Berkas (KTP, Ijazah, dll) untuk ditinjau
     public function show($id)
     {
-        // Mengambil detail 1 pendaftaran untuk diverifikasi
-        $pendaftaran = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan'])->findOrFail($id);
-        return view('admin.verifikasi.show', compact('pendaftaran'));
+        $peserta = Peserta::with('user')->findOrFail($id);
+        return view('admin.verifikasi.show', compact('peserta'));
     }
 
+    // 3. Memproses Keputusan (Setuju / Tolak)
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status_pendaftaran' => 'required|in:menunggu_verifikasi,disetujui,ditolak',
-            'keterangan_admin' => 'nullable|string'
+            'status_biodata' => 'required|in:disetujui,ditolak',
+            'catatan_biodata' => 'required_if:status_biodata,ditolak', // Wajib diisi jika Admin menolak
         ]);
 
-        $pendaftaran = Pendaftaran::findOrFail($id);
-        
-        $pendaftaran->update([
-            'status_pendaftaran' => $request->status_pendaftaran,
-            'keterangan_admin' => $request->keterangan_admin,
+        $peserta = Peserta::findOrFail($id);
+
+        $peserta->update([
+            'status_biodata' => $request->status_biodata,
+            // Jika ditolak simpan pesannya, jika disetujui kosongkan
+            'catatan_biodata' => $request->status_biodata == 'ditolak' ? $request->catatan_biodata : null, 
         ]);
 
-        return redirect()->route('admin.verifikasi.index')->with('success', 'Status pendaftaran peserta berhasil diperbarui!');
+        $pesan = $request->status_biodata == 'disetujui' 
+            ? 'Biodata peserta berhasil disetujui! Peserta sekarang dapat mendaftar kelas.' 
+            : 'Biodata peserta ditolak. Peserta telah diminta untuk memperbaiki datanya.';
+
+        // UBAH BARIS INI:
+        return redirect()->route('admin.verifikasi.index')->with('success', $pesan);
     }
 }

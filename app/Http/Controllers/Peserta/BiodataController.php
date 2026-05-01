@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Peserta; // <--- INI KUNCI PENYELESAIANNYA
+use App\Models\Peserta;
 
 class BiodataController extends Controller
 {
@@ -20,10 +20,12 @@ class BiodataController extends Controller
     {
         $request->validate([
             'nik' => 'required|string|max:16',
+            'tempat_lahir' => 'required|string|max:255',
+            'tanggal_lahir' => 'required|date',
             'nomor_telepon' => 'required|string|max:15',
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
             'pendidikan_terakhir' => 'required|string|max:50',
-            'alamat_lengkap' => 'required|string',
+            'alamat' => 'required|string', // UBAH KE 'alamat' SESUAI DATABASE
             'pas_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'file_ijazah' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:2048',
             'file_ktp' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -31,27 +33,27 @@ class BiodataController extends Controller
 
         $user = Auth::user();
         
+        $dataToSave = [
+            'nik' => $request->nik,
+            'tempat_lahir' => $request->tempat_lahir,
+            'tanggal_lahir' => $request->tanggal_lahir,
+            'nomor_telepon' => $request->nomor_telepon,
+            'jenis_kelamin' => $request->jenis_kelamin,
+            'pendidikan_terakhir' => $request->pendidikan_terakhir,
+            'alamat' => $request->alamat, // UBAH KE 'alamat' SESUAI DATABASE
+            'status_biodata' => 'menunggu', 
+            'catatan_biodata' => null,
+        ];
+
         // Update atau Create data peserta
         $peserta = Peserta::firstOrCreate(
             ['user_id' => $user->id],
-            [
-                'nik' => $request->nik,
-                'nomor_telepon' => $request->nomor_telepon,
-                'jenis_kelamin' => $request->jenis_kelamin,
-                'pendidikan_terakhir' => $request->pendidikan_terakhir,
-                'alamat_lengkap' => $request->alamat_lengkap,
-            ]
+            $dataToSave
         );
 
         // Jika bukan create baru, update datanya
         if (!$peserta->wasRecentlyCreated) {
-            $peserta->update([
-                'nik' => $request->nik,
-                'nomor_telepon' => $request->nomor_telepon,
-                'jenis_kelamin' => $request->jenis_kelamin,
-                'pendidikan_terakhir' => $request->pendidikan_terakhir,
-                'alamat_lengkap' => $request->alamat_lengkap,
-            ]);
+            $peserta->update($dataToSave);
         }
 
         // Handle Upload Pas Foto
@@ -78,6 +80,6 @@ class BiodataController extends Controller
             $peserta->update(['file_ijazah' => $request->file('file_ijazah')->store('peserta/ijazah', 'public')]);
         }
 
-        return back()->with('success', 'Biodata dan Berkas berhasil diperbarui!');
+        return back()->with('success', 'Biodata berhasil disimpan. Menunggu verifikasi dari Admin!');
     }
 }

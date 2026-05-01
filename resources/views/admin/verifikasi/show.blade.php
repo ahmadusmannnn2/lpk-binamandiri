@@ -1,126 +1,172 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
             <a href="{{ route('admin.verifikasi.index') }}" class="text-gray-500 hover:text-oranye transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
             <h2 class="font-bold text-xl text-hitam leading-tight">
-                {{ __('Detail Verifikasi Pendaftaran') }}
+                {{ __('Pengecekan Biodata & Berkas') }}
             </h2>
         </div>
     </x-slot>
 
     <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-2xl border-t-4 border-oranye">
-                <div class="p-6 sm:p-10">
-                    
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-200 pb-6 mb-6 gap-4">
-                        <div class="flex items-center gap-4">
-                            @if($pendaftaran->peserta->pas_foto)
-                                <img src="{{ asset('storage/' . $pendaftaran->peserta->pas_foto) }}" alt="Foto Peserta" class="w-16 h-16 rounded-full object-cover border-2 border-oranye shadow-sm">
-                            @else
-                                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 font-bold text-gray-400">No Pic</div>
-                            @endif
-                            <div>
-                                <h3 class="text-2xl font-black text-hitam">{{ $pendaftaran->peserta->user->name }}</h3>
-                                <p class="text-gray-500 font-medium">{{ $pendaftaran->peserta->user->email }} | {{ $pendaftaran->peserta->nomor_telepon }}</p>
-                            </div>
+            <!-- KIRI: DATA DIRI & FOTO -->
+            <div class="md:col-span-2 space-y-6">
+                <!-- PANEL BIODATA LENGKAP -->
+                <div class="bg-white shadow-lg rounded-2xl p-8 border-t-4 border-oranye">
+                    <h3 class="font-black text-lg text-hitam border-b pb-3 mb-6">Informasi Biodata Lengkap</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Nama Lengkap</p>
+                            <p class="font-bold text-hitam text-lg">{{ $peserta->user->name ?? '-' }}</p>
                         </div>
-                        <div class="text-left md:text-right">
-                            <p class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">Status Saat Ini</p>
-                            @if($pendaftaran->status_pendaftaran == 'menunggu_verifikasi')
-                                <span class="bg-yellow-100 text-yellow-800 px-4 py-1.5 rounded-full text-sm font-bold border border-yellow-200 shadow-sm">Menunggu Verifikasi</span>
-                            @elseif($pendaftaran->status_pendaftaran == 'disetujui')
-                                <span class="bg-green-100 text-green-800 px-4 py-1.5 rounded-full text-sm font-bold border border-green-200 shadow-sm">Disetujui</span>
-                            @else
-                                <span class="bg-red-100 text-red-800 px-4 py-1.5 rounded-full text-sm font-bold border border-red-200 shadow-sm">Ditolak</span>
-                            @endif
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">NIK</p>
+                            <p class="font-bold text-hitam text-lg">{{ $peserta->nik ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Tempat, Tanggal Lahir</p>
+                            <p class="font-medium text-gray-800">
+                                {{ $peserta->tempat_lahir ?? '-' }}, 
+                                {{ $peserta->tanggal_lahir ? \Carbon\Carbon::parse($peserta->tanggal_lahir)->format('d M Y') : '-' }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Jenis Kelamin</p>
+                            <p class="font-medium text-gray-800">{{ $peserta->jenis_kelamin ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Nomor HP/WhatsApp</p>
+                            <p class="font-medium text-gray-800">{{ $peserta->nomor_telepon ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Pendidikan Terakhir</p>
+                            <p class="font-medium text-gray-800">{{ $peserta->pendidikan_terakhir ?? '-' }}</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Alamat Lengkap</p>
+                            <p class="font-medium text-gray-800">{{ $peserta->alamat ?? '-' }}</p>
                         </div>
                     </div>
+                </div>
 
-                    <div class="bg-hitam text-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Program yang Diambil</p>
-                            <p class="font-bold text-oranye text-lg">{{ $pendaftaran->kelas->programPelatihan->nama_program ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Angkatan / Kelas</p>
-                            <p class="font-bold text-lg">{{ $pendaftaran->kelas->nama_kelas ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Waktu Mendaftar</p>
-                            <p class="font-bold text-lg">{{ \Carbon\Carbon::parse($pendaftaran->tanggal_daftar)->format('d M Y, H:i') }}</p>
-                        </div>
-                    </div>
-
-                    <h4 class="font-black text-lg text-hitam mb-4 border-b pb-2 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-oranye" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                        Pengecekan Berkas & Pembayaran
-                    </h4>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                        <div class="border border-gray-200 rounded-xl p-4 text-center bg-gray-50 hover:border-oranye transition duration-300">
-                            <p class="font-bold text-hitam mb-2">Bukti Pembayaran</p>
-                            @if($pendaftaran->bukti_pembayaran)
-                                <a href="{{ asset('storage/' . $pendaftaran->bukti_pembayaran) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative">
-                                    <img src="{{ asset('storage/' . $pendaftaran->bukti_pembayaran) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white font-bold">Klik untuk Perbesar</div>
+                <!-- PANEL LAMPIRAN 3 BERKAS -->
+                <div class="bg-white shadow-lg rounded-2xl p-8">
+                    <h3 class="font-black text-lg text-hitam border-b pb-3 mb-6">Lampiran Dokumen</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        
+                        <!-- Pas Foto -->
+                        <div class="border rounded-xl p-3 text-center bg-gray-50 hover:border-oranye transition duration-300">
+                            <p class="text-sm font-bold text-hitam mb-2">Pas Foto</p>
+                            @if($peserta->pas_foto)
+                                <a href="{{ asset('storage/'.$peserta->pas_foto) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative">
+                                    <img src="{{ asset('storage/'.$peserta->pas_foto) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white text-xs font-bold">Perbesar</div>
                                 </a>
                             @else
-                                <div class="h-48 flex items-center justify-center bg-gray-200 rounded-lg text-gray-500 text-sm italic">Belum diunggah</div>
+                                <div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
                             @endif
                         </div>
 
-                        <div class="border border-gray-200 rounded-xl p-4 text-center bg-gray-50 hover:border-oranye transition duration-300">
-                            <p class="font-bold text-hitam mb-2">Scan KTP</p>
-                            @if($pendaftaran->peserta->file_ktp)
-                                <a href="{{ asset('storage/' . $pendaftaran->peserta->file_ktp) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative">
-                                    <img src="{{ asset('storage/' . $pendaftaran->peserta->file_ktp) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white font-bold">Klik untuk Perbesar</div>
+                        <!-- KTP -->
+                        <div class="border rounded-xl p-3 text-center bg-gray-50 hover:border-oranye transition duration-300">
+                            <p class="text-sm font-bold text-hitam mb-2">Scan KTP</p>
+                            @if($peserta->file_ktp)
+                                <a href="{{ asset('storage/'.$peserta->file_ktp) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative">
+                                    <img src="{{ asset('storage/'.$peserta->file_ktp) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white text-xs font-bold">Perbesar</div>
                                 </a>
                             @else
-                                <div class="h-48 flex items-center justify-center bg-gray-200 rounded-lg text-gray-500 text-sm italic">Belum diunggah</div>
+                                <div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
                             @endif
                         </div>
 
-                        <div class="border border-gray-200 rounded-xl p-4 text-center bg-gray-50 hover:border-oranye transition duration-300">
-                            <p class="font-bold text-hitam mb-2">Scan Ijazah Terakhir</p>
-                            @if($pendaftaran->peserta->file_ijazah)
-                                <a href="{{ asset('storage/' . $pendaftaran->peserta->file_ijazah) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative bg-white">
-                                    @if(pathinfo($pendaftaran->peserta->file_ijazah, PATHINFO_EXTENSION) == 'pdf')
+                        <!-- Ijazah -->
+                        <div class="border rounded-xl p-3 text-center bg-gray-50 hover:border-oranye transition duration-300">
+                            <p class="text-sm font-bold text-hitam mb-2">Scan Ijazah</p>
+                            @if($peserta->file_ijazah)
+                                <a href="{{ asset('storage/'.$peserta->file_ijazah) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative bg-white">
+                                    @if(pathinfo($peserta->file_ijazah, PATHINFO_EXTENSION) == 'pdf')
                                         <div class="w-full h-full flex flex-col items-center justify-center text-red-500">
-                                            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.25 17.292l-4.5-4.364 1.857-1.857 2.643 2.506 5.643-5.784 1.857 1.857-7.5 7.642z"/></svg>
-                                            <span class="mt-2 text-sm font-bold text-gray-700">Dokumen PDF</span>
+                                            <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.25 17.292l-4.5-4.364 1.857-1.857 2.643 2.506 5.643-5.784 1.857 1.857-7.5 7.642z"/></svg>
+                                            <span class="mt-2 text-xs font-bold text-gray-700">File PDF</span>
                                         </div>
                                     @else
-                                        <img src="{{ asset('storage/' . $pendaftaran->peserta->file_ijazah) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                                        <img src="{{ asset('storage/'.$peserta->file_ijazah) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                                     @endif
-                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white font-bold">Klik untuk Lihat Berkas</div>
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white text-xs font-bold">Buka Berkas</div>
                                 </a>
                             @else
-                                <div class="h-48 flex items-center justify-center bg-gray-200 rounded-lg text-gray-500 text-sm italic">Belum diunggah</div>
+                                <div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
                             @endif
                         </div>
+
                     </div>
-
-                    @if($pendaftaran->status_pendaftaran == 'menunggu_verifikasi')
-                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
-                            <h4 class="font-black text-blue-900 mb-2">Keputusan Verifikasi</h4>
-                            <p class="text-sm text-blue-700 mb-6">Pastikan bukti pembayaran sesuai dengan tagihan, dan identitas KTP/Ijazah valid sebelum menyetujui pendaftaran ini.</p>
-                            
-                            <form action="{{ route('admin.verifikasi.update', $pendaftaran->id) }}" method="POST" class="flex justify-center gap-4">
-                                @csrf
-                                @method('PUT')
-                                <button type="submit" name="status_pendaftaran" value="ditolak" class="bg-white border-2 border-red-500 text-red-600 hover:bg-red-500 hover:text-white px-8 py-3 rounded-xl font-bold shadow-sm transition duration-300" onclick="return confirm('Yakin ingin MENOLAK pendaftaran ini?');">Tolak Pendaftaran</button>
-                                <button type="submit" name="status_pendaftaran" value="disetujui" class="bg-oranye hover:bg-[#c24b22] text-white border-2 border-oranye hover:border-[#c24b22] px-8 py-3 rounded-xl font-bold shadow-lg transition duration-300 transform hover:-translate-y-1" onclick="return confirm('Yakin ingin MENYETUJUI pendaftaran ini?');">Setujui & Masukkan ke Kelas</button>
-                            </form>
-                        </div>
-                    @endif
-
                 </div>
             </div>
+
+            <!-- KANAN: PANEL KEPUTUSAN ADMIN -->
+            <div class="md:col-span-1">
+                <div class="bg-white shadow-xl rounded-2xl p-6 sticky top-6">
+                    <h3 class="font-black text-lg text-hitam border-b pb-3 mb-4">Keputusan Verifikasi</h3>
+                    
+                    <form action="{{ route('admin.verifikasi.update', $peserta->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="space-y-4 mb-6">
+                            <label class="flex items-center p-4 border rounded-xl cursor-pointer hover:bg-green-50 hover:border-green-400 transition {{ $peserta->status_biodata == 'disetujui' ? 'bg-green-50 border-green-500' : '' }}">
+                                <input type="radio" name="status_biodata" value="disetujui" class="w-5 h-5 text-green-600 focus:ring-green-500" onchange="toggleCatatan()" {{ $peserta->status_biodata == 'disetujui' ? 'checked' : '' }} required>
+                                <div class="ml-3">
+                                    <span class="block font-bold text-green-700">Setujui Berkas</span>
+                                    <span class="block text-xs text-gray-500">Peserta diizinkan daftar kelas.</span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-center p-4 border rounded-xl cursor-pointer hover:bg-red-50 hover:border-red-400 transition {{ $peserta->status_biodata == 'ditolak' ? 'bg-red-50 border-red-500' : '' }}">
+                                <input type="radio" name="status_biodata" value="ditolak" class="w-5 h-5 text-red-600 focus:ring-red-500" onchange="toggleCatatan()" {{ $peserta->status_biodata == 'ditolak' ? 'checked' : '' }} required>
+                                <div class="ml-3">
+                                    <span class="block font-bold text-red-700">Tolak Berkas</span>
+                                    <span class="block text-xs text-gray-500">Berkas tidak valid / buram.</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Form Catatan (Muncul Otomatis Jika Ditolak) -->
+                        <div id="catatan_box" class="mb-6 {{ $peserta->status_biodata == 'ditolak' ? 'block' : 'hidden' }}">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Alasan Penolakan <span class="text-red-500">*</span></label>
+                            <textarea name="catatan_biodata" id="catatan_input" rows="3" class="w-full border-gray-300 focus:ring-oranye focus:border-oranye rounded-lg shadow-sm" placeholder="Contoh: Scan KTP terlalu buram, mohon foto ulang...">{{ $peserta->catatan_biodata }}</textarea>
+                        </div>
+
+                        <button type="submit" class="w-full bg-hitam text-white py-3 rounded-xl font-bold hover:bg-oranye transition shadow-lg flex justify-center items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                            Simpan Keputusan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </div>
+
+    <!-- Script pemuncul catatan -->
+    <script>
+        function toggleCatatan() {
+            var tolakRadio = document.querySelector('input[name="status_biodata"][value="ditolak"]');
+            var catatanBox = document.getElementById('catatan_box');
+            var catatanInput = document.getElementById('catatan_input');
+            
+            if (tolakRadio.checked) {
+                catatanBox.classList.remove('hidden');
+                catatanInput.required = true;
+            } else {
+                catatanBox.classList.add('hidden');
+                catatanInput.required = false;
+                catatanInput.value = ''; // Kosongkan catatan jika diubah ke setuju
+            }
+        }
+    </script>
 </x-app-layout>

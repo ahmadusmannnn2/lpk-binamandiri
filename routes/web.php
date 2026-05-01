@@ -3,18 +3,14 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Pengaturan;
-use Illuminate\Http\Request; // Tambahan untuk grafik filter
+use Illuminate\Http\Request;
 
 // ==========================================
 // LANDING PAGE & REDIRECT DASHBOARD
 // ==========================================
 Route::get('/', function () {
-    // Ambil semua data pengaturan untuk ditampilkan di halaman depan
     $pengaturan = Pengaturan::pluck('nilai', 'kunci')->toArray();
-    
-    // Ambil 3 Program Pelatihan terbaru dari database
     $programs = \App\Models\ProgramPelatihan::latest()->take(3)->get();
-
     return view('welcome', compact('pengaturan', 'programs'));
 });
 
@@ -34,7 +30,7 @@ Route::get('/dashboard', function () {
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
 
-    // DASHBOARD ADMIN (DENGAN SUNTIKAN DATA GRAFIK)
+    // DASHBOARD ADMIN
     Route::get('/dashboard', function (Request $request) {
         $tahun = $request->input('tahun', date('Y'));
 
@@ -42,7 +38,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
             'peserta' => \App\Models\Peserta::count(),
             'instruktur' => \App\Models\Instruktur::count(),
             'kelas_berjalan' => \App\Models\Kelas::where('status_kelas', 'berjalan')->count(),
-            'menunggu_verifikasi' => \App\Models\Pendaftaran::where('status_pendaftaran', 'menunggu_verifikasi')->count(),
+            // Ubah counter menunggu_verifikasi untuk menghitung biodata yang menunggu
+            'menunggu_verifikasi' => \App\Models\Peserta::where('status_biodata', 'menunggu')->count(),
         ];
         $pendaftar_baru = \App\Models\Pendaftaran::with('peserta.user', 'kelas')->latest()->take(5)->get();
 
@@ -66,20 +63,27 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Data Master (CRUD)
     Route::resource('program', \App\Http\Controllers\Admin\ProgramPelatihanController::class);
     Route::resource('instruktur', \App\Http\Controllers\Admin\InstrukturController::class);
-    
-    // --- DI SINI LETAK RUTE PESERTA & RESET PASSWORD YANG BENAR ---
     Route::resource('peserta', \App\Http\Controllers\Admin\PesertaController::class);
     Route::put('/peserta/{id}/reset-password', [\App\Http\Controllers\Admin\PesertaController::class, 'resetPassword'])->name('peserta.reset_password');
-    
     Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
-    // Tambahan fitur pindah kelas
     Route::post('/kelas/{kelas_id}/pindah-peserta/{pendaftaran_id}', [\App\Http\Controllers\Admin\KelasController::class, 'pindahPeserta'])->name('kelas.pindah_peserta');
     
-    // Fitur Utama
+    // --- FITUR BARU 1: VERIFIKASI BIODATA (MENGGUNAKAN VerifikasiController) ---
     Route::get('/verifikasi', [\App\Http\Controllers\Admin\VerifikasiController::class, 'index'])->name('verifikasi.index');
     Route::get('/verifikasi/{id}', [\App\Http\Controllers\Admin\VerifikasiController::class, 'show'])->name('verifikasi.show');
     Route::put('/verifikasi/{id}', [\App\Http\Controllers\Admin\VerifikasiController::class, 'update'])->name('verifikasi.update');
 
+
+    // --- FITUR BARU 2: VERIFIKASI PENDAFTARAN & PEMBAYARAN ---
+    // (Akan dibuat controllernya nanti)
+    Route::get('/verifikasi-pembayaran', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'index'])->name('verifikasi_pembayaran.index');
+    
+    Route::get('/verifikasi-pembayaran/{id}/kelola', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'show'])->name('verifikasi_pembayaran.show');
+    
+    Route::put('/verifikasi-pembayaran/{id}', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'update'])->name('verifikasi_pembayaran.update');
+    Route::get('/verifikasi-pembayaran/{id}/cetak-kwitansi', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'cetakKwitansi'])->name('verifikasi_pembayaran.cetak_kwitansi');
+
+    // Laporan
     Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/cetak', [\App\Http\Controllers\Admin\LaporanController::class, 'cetak'])->name('laporan.cetak');
     Route::get('/laporan/excel', [\App\Http\Controllers\Admin\LaporanController::class, 'excel'])->name('laporan.excel'); 
@@ -90,6 +94,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::put('/sertifikat/{id}', [App\Http\Controllers\Admin\AkademikController::class, 'sertifikatUpdate'])->name('sertifikat.update');
     Route::get('/sertifikat/{id}/cetak', [App\Http\Controllers\Admin\AkademikController::class, 'sertifikatCetak'])->name('sertifikat.cetak');
     
+    // Pengaturan Web
     Route::get('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'index'])->name('pengaturan.index');
     Route::put('/pengaturan', [\App\Http\Controllers\Admin\PengaturanController::class, 'update'])->name('pengaturan.update');
 });
@@ -103,7 +108,6 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
     Route::get('/dashboard', function () {
         $instruktur = auth()->user()->instruktur;
 
-        // 1. KELAS AKTIF (Untuk Quick Access)
         $kelasAktif = $instruktur ? \App\Models\Kelas::with(['programPelatihan'])
             ->withCount(['pendaftaran' => function($q) {
                 $q->where('status_pendaftaran', 'disetujui');
@@ -112,7 +116,6 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
             ->whereDate('tanggal_selesai', '>=', now())
             ->get() : collect();
 
-        // 2. AMBIL PERTEMUAN (H-7 sampai H+7)
         $pertemuan = $instruktur ? \App\Models\Pertemuan::with('kelas.programPelatihan')
             ->whereHas('kelas', function ($q) use ($instruktur) {
                 $q->where('instruktur_id', $instruktur->id);
@@ -121,11 +124,9 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
             ->orderBy('tanggal', 'asc')
             ->get() : collect();
 
-        // 3. PISAHKAN JADWAL TIMELINE
         $jadwalHariIni = $pertemuan->filter(fn($j) => \Carbon\Carbon::parse($j->tanggal)->isToday());
         $jadwalBesok = $pertemuan->filter(fn($j) => \Carbon\Carbon::parse($j->tanggal)->isTomorrow());
 
-        // 4. DETEKSI TUGAS TERTUNDA (Pertemuan yg sudah lewat tapi belum diisi absensinya)
         $tugasTertunda = $pertemuan->filter(function($j) {
              return \Carbon\Carbon::parse($j->tanggal)->isPast() &&
                     !\Carbon\Carbon::parse($j->tanggal)->isToday() &&
@@ -179,11 +180,19 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
     Route::put('/biodata', [\App\Http\Controllers\Peserta\BiodataController::class, 'update'])->name('biodata.update');
 
     // --- PENDAFTARAN 2 TAHAP ---
-    Route::get('/pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'index'])->name('pendaftaran.index'); // TAHAP 1: Pilih Program
-    Route::get('/pendaftaran/program/{program_id}', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'showProgram'])->name('pendaftaran.show_program'); // TAHAP 2: Pilih Angkatan/Kelas
-    Route::get('/pendaftaran/{kelas_id}/daftar', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'create'])->name('pendaftaran.create'); // TAHAP 3: Form Daftar
+    Route::get('/pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'index'])->name('pendaftaran.index'); 
+    Route::get('/pendaftaran/program/{program_id}', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'showProgram'])->name('pendaftaran.show_program'); 
+    Route::get('/pendaftaran/{kelas_id}/daftar', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'create'])->name('pendaftaran.create'); 
     Route::post('/pendaftaran/{kelas_id}/store', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'store'])->name('pendaftaran.store');
 
+    // Rute Pembayaran Midtrans
+    Route::get('/pembayaran/{id}', [\App\Http\Controllers\PembayaranController::class, 'bayar'])->name('pembayaran.bayar');
+
+    // --- FITUR RIWAYAT PENDAFTARAN & TAGIHAN PESERTA ---
+    Route::get('/riwayat-pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'riwayat'])->name('riwayat.index');
+    Route::get('/riwayat-pendaftaran/{id}/detail', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'showRiwayat'])->name('riwayat.show');
+    Route::get('/riwayat-pendaftaran/{id}/cetak', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'cetakKwitansi'])->name('riwayat.cetak');
+    
     Route::get('/materi', [\App\Http\Controllers\Peserta\MateriController::class, 'index'])->name('materi.index');
     Route::get('/sertifikat', [\App\Http\Controllers\Peserta\SertifikatController::class, 'index'])->name('sertifikat.index');
     Route::get('/sertifikat/{id}/cetak', [\App\Http\Controllers\Peserta\SertifikatController::class, 'cetak'])->name('sertifikat.cetak');
@@ -191,12 +200,15 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
 
 
 // ==========================================
-// RUTE PROFIL (BAWAAN BREEZE)
+// RUTE PROFIL & CALLBACK MIDTRANS
 // ==========================================
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+// Rute Callback untuk menerima notifikasi dari Midtrans (Wajib di luar middleware auth)
+Route::post('/midtrans/callback', [\App\Http\Controllers\PembayaranController::class, 'callback']);
 
 require __DIR__ . '/auth.php';

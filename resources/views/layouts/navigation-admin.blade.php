@@ -18,6 +18,10 @@
     // Logika Menu Aktif
     $isMasterActive = request()->routeIs('admin.program.*') || request()->routeIs('admin.instruktur.*') || request()->routeIs('admin.peserta.*') || request()->routeIs('admin.kelas.*');
     $isAkademikActive = request()->routeIs('admin.nilai.*') || request()->routeIs('admin.sertifikat.*');
+    
+    // Menu Verifikasi Aktif
+    $isVerifikasiBiodataActive = request()->routeIs('admin.verifikasi.*');
+    $isVerifikasiPembayaranActive = request()->routeIs('admin.verifikasi_pembayaran.*');
 @endphp
 
 <div x-data="{ sidebarOpen: false }">
@@ -70,7 +74,7 @@
     <!-- SPACER: Ganjalan setinggi navbar (h-20) agar konten di bawahnya tidak tertutup -->
     <div class="h-20"></div>
 
-    <!-- Sisa Sidebar (Tidak Berubah) -->
+    <!-- Sisa Sidebar -->
     <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 bg-black/80 z-50 backdrop-blur-sm" @click="sidebarOpen = false" style="display: none;"></div>
 
     <aside class="fixed inset-y-0 left-0 w-72 bg-hitam border-r border-gray-800 z-[60] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col"
@@ -116,10 +120,16 @@
                 </div>
             </div>
 
-            <!-- MENU VERIFIKASI -->
-            <a href="{{ route('admin.verifikasi.index') }}" class="flex items-center px-6 py-4 transition duration-200 border-l-4 {{ request()->routeIs('admin.verifikasi.*') ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
-                <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="font-bold">Verifikasi Pendaftar</span>
+            <!-- MENU VERIFIKASI BIODATA -->
+            <a href="{{ route('admin.verifikasi.index') }}" class="flex items-center px-6 py-4 transition duration-200 border-l-4 {{ $isVerifikasiBiodataActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
+                <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span class="font-bold">Verifikasi Biodata</span>
+            </a>
+
+            <!-- MENU VERIFIKASI PEMBAYARAN (BARU) -->
+            <a href="{{ route('admin.verifikasi_pembayaran.index') }}" class="flex items-center px-6 py-4 transition duration-200 border-l-4 {{ $isVerifikasiPembayaranActive ? 'border-oranye text-oranye bg-gray-900' : 'border-transparent text-gray-200 hover:text-oranye hover:bg-gray-900' }}">
+                <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="font-bold">Data Pembayaran</span>
             </a>
 
             <!-- AKADEMIK & KELULUSAN -->

@@ -33,6 +33,56 @@
                 </div>
             @endif
 
+            <!-- FITUR BARU: BANNER STATUS VERIFIKASI -->
+            @if(isset($peserta) && $peserta->status_biodata != 'belum_isi')
+                <div class="mb-8 rounded-2xl shadow-sm border-l-8 p-6 
+                    {{ $peserta->status_biodata == 'disetujui' ? 'bg-green-50 border-green-500' : '' }}
+                    {{ $peserta->status_biodata == 'menunggu' ? 'bg-yellow-50 border-yellow-400' : '' }}
+                    {{ $peserta->status_biodata == 'ditolak' ? 'bg-red-50 border-red-500' : '' }}
+                ">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 mt-1">
+                            @if($peserta->status_biodata == 'disetujui')
+                                <div class="bg-green-100 p-2 rounded-full">
+                                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                            @elseif($peserta->status_biodata == 'menunggu')
+                                <div class="bg-yellow-100 p-2 rounded-full animate-pulse">
+                                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                            @else
+                                <div class="bg-red-100 p-2 rounded-full">
+                                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                            @endif
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black uppercase tracking-wider
+                                {{ $peserta->status_biodata == 'disetujui' ? 'text-green-800' : '' }}
+                                {{ $peserta->status_biodata == 'menunggu' ? 'text-yellow-800' : '' }}
+                                {{ $peserta->status_biodata == 'ditolak' ? 'text-red-800' : '' }}
+                            ">
+                                Status Berkas: {{ $peserta->status_biodata }}
+                            </h3>
+                            <div class="mt-2 text-sm font-medium
+                                {{ $peserta->status_biodata == 'disetujui' ? 'text-green-700' : '' }}
+                                {{ $peserta->status_biodata == 'menunggu' ? 'text-yellow-700' : '' }}
+                                {{ $peserta->status_biodata == 'ditolak' ? 'text-red-700' : '' }}
+                            ">
+                                @if($peserta->status_biodata == 'disetujui')
+                                    <p>Selamat! Biodata dan berkas Anda telah diverifikasi dan disetujui. Anda sekarang dapat melanjutkan ke menu <strong>Pendaftaran</strong> untuk memilih kelas pelatihan.</p>
+                                @elseif($peserta->status_biodata == 'menunggu')
+                                    <p>Biodata dan berkas Anda sedang dalam antrean pengecekan oleh Admin kami. Mohon menunggu maksimal 1x24 jam kerja.</p>
+                                @elseif($peserta->status_biodata == 'ditolak')
+                                    <p>Mohon maaf, pengajuan Anda dikembalikan. <strong>Catatan Admin:</strong> <span class="italic font-bold">"{{ $peserta->catatan_biodata }}"</span></p>
+                                    <p class="mt-2 text-red-800 font-bold bg-red-100 py-2 px-3 rounded-lg inline-block">Silakan perbaiki data/berkas di bawah ini lalu tekan tombol simpan kembali.</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-xl border-t-4 border-oranye">
                 <div class="p-6 sm:p-10">
                     <form action="{{ route('peserta.biodata.update') }}" method="POST" enctype="multipart/form-data" class="space-y-10">
@@ -68,6 +118,16 @@
                                 </div>
 
                                 <div>
+                                    <x-input-label for="tempat_lahir" value="Tempat Lahir" class="font-bold text-gray-700" />
+                                    <x-text-input id="tempat_lahir" name="tempat_lahir" type="text" class="mt-1 block w-full focus:border-oranye focus:ring-oranye" value="{{ old('tempat_lahir', $peserta->tempat_lahir ?? '') }}" required placeholder="Contoh: Wonosobo" />
+                                </div>
+
+                                <div>
+                                    <x-input-label for="tanggal_lahir" value="Tanggal Lahir" class="font-bold text-gray-700" />
+                                    <x-text-input id="tanggal_lahir" name="tanggal_lahir" type="date" class="mt-1 block w-full focus:border-oranye focus:ring-oranye" value="{{ old('tanggal_lahir', $peserta->tanggal_lahir ?? '') }}" required />
+                                </div>
+
+                                <div>
                                     <x-input-label for="jenis_kelamin" value="Jenis Kelamin" class="font-bold text-gray-700" />
                                     <select id="jenis_kelamin" name="jenis_kelamin" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-oranye focus:ring-oranye" required>
                                         <option value="" disabled {{ empty($peserta->jenis_kelamin) ? 'selected' : '' }}>-- Pilih Jenis Kelamin --</option>
@@ -89,8 +149,8 @@
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <x-input-label for="alamat_lengkap" value="Alamat Lengkap KTP" class="font-bold text-gray-700" />
-                                    <textarea id="alamat_lengkap" name="alamat_lengkap" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-oranye focus:ring-oranye" required placeholder="Tuliskan alamat lengkap beserta RT/RW, Kelurahan, Kecamatan...">{{ old('alamat_lengkap', $peserta->alamat_lengkap ?? '') }}</textarea>
+                                    <x-input-label for="alamat" value="Alamat Lengkap KTP" class="font-bold text-gray-700" />
+                                    <textarea id="alamat" name="alamat" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-oranye focus:ring-oranye" required placeholder="Tuliskan alamat lengkap beserta RT/RW, Kelurahan, Kecamatan...">{{ old('alamat', $peserta->alamat ?? '') }}</textarea>
                                 </div>
                             </div>
                         </div>
