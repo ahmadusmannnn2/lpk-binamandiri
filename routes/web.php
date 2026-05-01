@@ -9,8 +9,13 @@ use Illuminate\Http\Request; // Tambahan untuk grafik filter
 // LANDING PAGE & REDIRECT DASHBOARD
 // ==========================================
 Route::get('/', function () {
+    // Ambil semua data pengaturan untuk ditampilkan di halaman depan
     $pengaturan = Pengaturan::pluck('nilai', 'kunci')->toArray();
-    return view('welcome', compact('pengaturan'));
+    
+    // Ambil 3 Program Pelatihan terbaru dari database
+    $programs = \App\Models\ProgramPelatihan::latest()->take(3)->get();
+
+    return view('welcome', compact('pengaturan', 'programs'));
 });
 
 // PENGARAH DASHBOARD AWAL
