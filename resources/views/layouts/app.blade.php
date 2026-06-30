@@ -68,6 +68,12 @@
             <main class="transition-all duration-300 ease-in-out">
                 {{ $slot }}
             </main>
+
+            @if(auth()->user()->role === 'peserta')
+                <x-floating-chat />
+            @endif
         </div>
+
+        @stack('scripts')
     </body>
 </html>

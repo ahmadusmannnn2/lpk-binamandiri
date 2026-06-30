@@ -213,6 +213,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// ==========================================
+// RUTE CHAT (AJAX & VIEW)
+// ==========================================
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat/messages/{user_id}', [\App\Http\Controllers\ChatController::class, 'getMessages']);
+    Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+});
+
 // Rute Callback untuk menerima notifikasi dari Midtrans (Wajib di luar middleware auth)
 Route::post('/midtrans/callback', [\App\Http\Controllers\PembayaranController::class, 'callback']);
 

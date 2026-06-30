@@ -61,6 +61,21 @@
                 </div>
 
                 <div class="flex items-center gap-4">
+                    <!-- ICON CHAT ADMIN -->
+                    <a href="{{ route('chat.index') }}" title="Pesan Masuk" class="relative text-gray-300 hover:text-oranye transition transform hover:scale-110 p-2 bg-white/5 hover:bg-white/10 rounded-full border border-transparent hover:border-oranye/30">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        
+                        @php
+                            $unreadAdmin = \App\Models\Pesan::where('penerima_id', Auth::id())->whereNull('dibaca_pada')->count();
+                        @endphp
+                        @if($unreadAdmin > 0)
+                            <span class="absolute top-0 right-0 flex h-3 w-3">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-600 border border-hitam"></span>
+                            </span>
+                        @endif
+                    </a>
+
                     <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 group cursor-pointer p-1.5 rounded-full hover:bg-white/5 transition duration-300 border border-transparent hover:border-gray-700">
                         <div class="hidden md:block text-right">
                             <div class="text-sm font-bold text-white group-hover:text-oranye transition duration-300">{{ Auth::user()->name }}</div>

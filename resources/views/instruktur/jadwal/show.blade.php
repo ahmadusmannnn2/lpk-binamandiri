@@ -38,7 +38,7 @@
                 </div>
             </div>
 
-            <div class="bg-white overflow-hidden shadow-xl rounded-b-xl border border-gray-100">
+            <div id="penilaian" class="bg-white overflow-hidden shadow-xl rounded-b-xl border border-gray-100 scroll-mt-24">
                 <div class="p-6">
                     <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                         <h3 class="text-lg font-black text-hitam border-b-2 border-oranye pb-1 inline-block">Buku Penilaian & Evaluasi</h3>
@@ -179,7 +179,7 @@
             </div>
 
             <!-- ... BAGIAN JADWAL PERTEMUAN (Tidak ada yang diubah) ... -->
-            <div class="mt-10 bg-white overflow-hidden shadow-xl rounded-xl border border-gray-100">
+            <div id="absensi" class="mt-10 bg-white overflow-hidden shadow-xl rounded-xl border border-gray-100 scroll-mt-24">
                 <div class="p-6 sm:p-8">
                     <h3 class="text-xl font-black text-hitam mb-6 flex items-center gap-2">
                         <svg class="w-6 h-6 text-oranye" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>

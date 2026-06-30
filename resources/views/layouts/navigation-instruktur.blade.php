@@ -55,7 +55,7 @@
                     <a href="{{ route('instruktur.jadwal.index') }}" 
                        class="group flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 {{ request()->routeIs('instruktur.jadwal.*') ? 'text-oranye bg-oranye/10 shadow-[inset_0_-3px_0_rgba(222,94,46,1)]' : 'text-gray-200 hover:text-white hover:bg-white/10' }}">
                         <svg class="w-6 h-6 transform group-hover:scale-110 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span class="hidden md:block font-bold text-sm tracking-wide">Jadwal & Nilai</span>
+                        <span class="hidden md:block font-bold text-sm tracking-wide">Ruang Kelas Aktif</span>
                     </a>
 
                 </div>

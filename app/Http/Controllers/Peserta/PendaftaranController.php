@@ -64,7 +64,11 @@ class PendaftaranController extends Controller
         
         $kelas = Kelas::with('instruktur.user')
                     ->where('program_pelatihan_id', $program_id) 
-                    ->where('tanggal_mulai', '>=', now()->toDateString()) // Hanya kelas yang belum mulai
+                    ->where(function ($query) {
+                        $query->where('status_kelas', 'menunggu')
+                              ->orWhereNull('tanggal_mulai')
+                              ->orWhere('tanggal_mulai', '>=', now()->toDateString());
+                    })
                     ->get();
 
         $peserta = Auth::user()->peserta;
@@ -124,6 +128,17 @@ class PendaftaranController extends Controller
             'status_pendaftaran' => 'menunggu_verifikasi', // Status otomatis berubah nanti setelah bayar
             'status_pembayaran' => 'pending', 
         ]);
+
+        // FITUR BARU: Otomatis kirim pesan dari Admin ke Peserta
+        $admin = \App\Models\User::where('role', 'admin')->first();
+        if ($admin) {
+            \App\Models\Pesan::create([
+                'pengirim_id' => $admin->id,
+                'penerima_id' => Auth::id(),
+                'pesan' => 'Halo kak ' . Auth::user()->name . '! 👋 Terima kasih telah mendaftar di program pelatihan kami. Silakan selesaikan pembayaran agar kelas Anda bisa segera kami proses. Jika ada pertanyaan, jangan ragu untuk membalas pesan ini ya!',
+                'kelas_id' => $kelas->id,
+            ]);
+        }
 
         return redirect()->route('peserta.pembayaran.bayar', $pendaftaran->id);
     }
