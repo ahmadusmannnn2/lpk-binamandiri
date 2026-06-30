@@ -23,6 +23,11 @@ class MateriController extends Controller
 
     public function store(Request $request, $kelas_id)
     {
+        $kelas = Kelas::findOrFail($kelas_id);
+        if ($kelas->instruktur_id !== Auth::user()->instruktur->id) {
+            abort(403, 'Akses Ditolak');
+        }
+
         $request->validate([
             'judul_materi' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -44,6 +49,9 @@ class MateriController extends Controller
     public function destroy($id)
     {
         $materi = Materi::findOrFail($id);
+        if ($materi->kelas->instruktur_id !== Auth::user()->instruktur->id) {
+            abort(403, 'Akses Ditolak');
+        }
         
         // Hapus file fisik
         if (Storage::disk('public')->exists($materi->file_materi)) {

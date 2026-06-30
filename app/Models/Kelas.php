@@ -43,4 +43,9 @@ class Kelas extends Model
     {
         return $this->hasMany(Pendaftaran::class, 'kelas_id');
     }
+
+    public function fase()
+    {
+        return $this->hasMany(FaseKelas::class, 'kelas_id')->orderBy('urutan', 'asc');
+    }
 }

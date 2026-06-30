@@ -22,7 +22,8 @@ class JadwalController extends Controller
     public function show($id)
     {
         $instruktur = Auth::user()->instruktur;
-        $kelas = Kelas::with('programPelatihan')->where('id', $id)->where('instruktur_id', $instruktur->id)->firstOrFail();
+        $kelas = Kelas::with(['programPelatihan', 'fase.pertemuan', 'fase.nilaiFase'])
+            ->where('id', $id)->where('instruktur_id', $instruktur->id)->firstOrFail();
 
         $pesertaKelas = Pendaftaran::with('peserta.user')->where('kelas_id', $id)->where('status_pendaftaran', 'disetujui')->get();
 

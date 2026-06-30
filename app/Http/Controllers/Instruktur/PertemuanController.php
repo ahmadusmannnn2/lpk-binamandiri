@@ -15,9 +15,14 @@ class PertemuanController extends Controller
     // 1. Menyimpan Pertemuan Baru (Ditambah Upload Materi)
     public function store(Request $request, $kelas_id)
     {
+        $kelas = Kelas::findOrFail($kelas_id);
+        if ($kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+        }
         $request->validate([
             'judul_pertemuan' => 'required|string|max:255',
             'tanggal' => 'required|date',
+            'fase_kelas_id' => 'required|exists:fase_kelas,id',
             'file_materi' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip,rar|max:5120', // Maks 5MB
         ]);
 
@@ -28,6 +33,7 @@ class PertemuanController extends Controller
 
         $pertemuan = Pertemuan::create([
             'kelas_id' => $kelas_id,
+            'fase_kelas_id' => $request->fase_kelas_id,
             'judul_pertemuan' => $request->judul_pertemuan,
             'tanggal' => $request->tanggal,
             'file_materi' => $materiPath, // Simpan path materi
@@ -52,6 +58,10 @@ class PertemuanController extends Controller
     public function show($id)
     {
         $pertemuan = Pertemuan::with('kelas.programPelatihan')->findOrFail($id);
+        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+            abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
+        }
+
         $absensi = Absensi::with('pendaftaran.peserta.user')->where('pertemuan_id', $id)->get();
 
         return view('instruktur.pertemuan.show', compact('pertemuan', 'absensi'));
@@ -67,6 +77,9 @@ class PertemuanController extends Controller
         ]);
 
         $pertemuan = Pertemuan::findOrFail($id);
+        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
 
         if ($request->has('absensi')) {
             foreach ($request->absensi as $absensi_id => $data) {
@@ -87,6 +100,9 @@ class PertemuanController extends Controller
     public function destroy($id)
     {
         $pertemuan = Pertemuan::findOrFail($id);
+        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
         $kelas_id = $pertemuan->kelas_id;
         
         // Hapus file materi jika ada

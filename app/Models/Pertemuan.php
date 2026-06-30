@@ -18,4 +18,9 @@ class Pertemuan extends Model
     {
         return $this->hasMany(Absensi::class, 'pertemuan_id');
     }
+
+    public function faseKelas()
+    {
+        return $this->belongsTo(FaseKelas::class, 'fase_kelas_id');
+    }
 }

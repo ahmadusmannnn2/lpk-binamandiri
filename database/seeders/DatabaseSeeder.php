@@ -64,31 +64,6 @@ class DatabaseSeeder extends Seeder
         // ==========================================
         // 4. PROGRAM PELATIHAN & KELAS (Sebagai data awal)
         // ==========================================
-        $programs = [
-            ['nama' => 'Sertifikasi Plat 3G (Kombinasi)', 'durasi' => 43, 'harga' => 24000000, 'desc' => 'Sertifikat: BNSP | Durasi: 43 hari'],
-            ['nama' => 'GTAW (1F, 2F, 3F, 1G, 2G, 3G)', 'durasi' => 32, 'harga' => 19000000, 'desc' => 'Sertifikat: BNSP | Durasi: 32 hari'],
-            ['nama' => 'SMAW (1F, 2F, 3F, 1G, 2G, 3G)', 'durasi' => 26, 'harga' => 15000000, 'desc' => 'Sertifikat: BNSP | Durasi: 26 hari'],
-            ['nama' => 'FCAW / GMAW (Sertifikasi Plat 3G)', 'durasi' => 28, 'harga' => 16000000, 'desc' => 'Sertifikat: BNSP | Durasi: 28 hari'],
-            ['nama' => 'FCAW (Level Pemula)', 'durasi' => 28, 'harga' => 16500000, 'desc' => 'Level: Pemula | Durasi: 28 hari'],
-        ];
-
-        foreach ($programs as $prog) {
-            $programBaru = ProgramPelatihan::create([
-                'nama_program' => $prog['nama'],
-                'deskripsi' => $prog['desc'],
-                'harga_pelatihan' => $prog['harga'],
-                'durasi_hari' => $prog['durasi'],
-            ]);
-
-            for ($i = 1; $i <= 5; $i++) {
-                Kelas::create([
-                    'program_pelatihan_id' => $programBaru->id,
-                    'instruktur_id' => $instruktur->id,
-                    'nama_kelas' => 'Angkatan ' . $i . ' - ' . explode(' ', $prog['nama'])[0],
-                    'kuota_peserta' => 20,
-                    'status_kelas' => ($i == 1) ? 'berjalan' : 'menunggu', 
-                ]);
-            }
-        }
+        // Dikosongkan sesuai permintaan agar sistem bersih dari awal.
     }
 }

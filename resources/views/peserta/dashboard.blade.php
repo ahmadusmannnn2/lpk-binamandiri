@@ -27,13 +27,14 @@
                 </div>
                 <div class="relative z-10">
                     <h3 class="text-3xl md:text-4xl font-black mb-2 tracking-tight">Semangat Belajar, <span class="text-oranye">{{ Auth::user()->name }}!</span> 🚀</h3>
-                    <p class="text-gray-300 max-w-xl text-sm md:text-base">Konsistensi adalah kunci menjadi ahli. Mari pantau kehadiran harian Anda dan perhatikan evaluasi akhir dari instruktur.</p>
+                    <p class="text-gray-300 max-w-xl text-sm md:text-base">Konsistensi adalah kunci menjadi ahli. Selesaikan seluruh fase pembelajaran Anda tahap demi tahap.</p>
                 </div>
             </div>
 
             @if($kelasAktif)
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                     
+                    <!-- SIDEBAR KIRI: INFORMASI KELAS & RAPOR PER FASE -->
                     <div class="lg:col-span-1 space-y-6">
                         <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100 relative">
                             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-oranye to-[#c24b22] rounded-t-2xl"></div>
@@ -47,97 +48,121 @@
                                     <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                     <span class="font-medium">Instruktur: <span class="font-bold text-hitam">{{ $kelasAktif->kelas?->instruktur?->user?->name ?? 'Belum Ada' }}</span></span>
                                 </div>
-                                <div class="flex items-center gap-3 text-sm text-gray-600">
-                                    <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    <span class="font-medium">Periode: <span class="font-bold text-hitam">{{ \Carbon\Carbon::parse($kelasAktif->kelas?->tanggal_mulai)->format('d M') }} - {{ \Carbon\Carbon::parse($kelasAktif->kelas?->tanggal_selesai)->format('d M Y') }}</span></span>
-                                </div>
                             </div>
                             
-                            <div class="bg-blue-50 rounded-xl p-5 border border-blue-200 mt-4">
-                                <p class="text-[10px] font-black text-blue-800 uppercase tracking-widest border-b border-blue-200 pb-2 mb-4 flex items-center justify-between">
-                                    Rapor Evaluasi Akhir
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                </p>
-                                
+                            <!-- LOOP RAPOR EVALUASI PER FASE -->
+                            @if($kelasAktif->kelas && $kelasAktif->kelas->fase->count() > 0)
                                 <div class="space-y-4">
-                                    <div>
-                                        <div class="flex justify-between text-xs font-bold mb-1">
-                                            <span class="text-blue-900">Total Kehadiran</span>
-                                            <span class="{{ $kelasAktif->kehadiran >= 80 ? 'text-green-600' : 'text-red-600' }}">{{ $kelasAktif->kehadiran ?? 0 }}%</span>
-                                        </div>
-                                        <div class="w-full bg-blue-200 rounded-full h-2">
-                                            <div class="{{ $kelasAktif->kehadiran >= 80 ? 'bg-green-500' : 'bg-red-500' }} h-full rounded-full transition-all duration-1000" style="width: {{ $kelasAktif->kehadiran ?? 0 }}%"></div>
-                                        </div>
-                                    </div>
-
+                                @foreach($kelasAktif->kelas->fase as $fase)
                                     @php
-                                        $parameters = $kelasAktif->kelas?->programPelatihan?->parameter_penilaian ?? [];
-                                        $detailNilai = $kelasAktif->detail_nilai ?? [];
-                                        $catatanAkhir = $detailNilai['catatan_instruktur_final'] ?? '';
+                                        // Cari nilai fase peserta ini
+                                        $nilaiFase = $kelasAktif->nilaiFase->where('fase_kelas_id', $fase->id)->first();
+                                        
+                                        // Hitung Progress Kehadiran
+                                        $totalPertemuan = $fase->target_pertemuan > 0 ? $fase->target_pertemuan : max(1, $fase->pertemuan->count());
+                                        $totalHadir = \App\Models\Absensi::where('pendaftaran_id', $kelasAktif->id)
+                                                        ->whereHas('pertemuan', function($q) use ($fase) {
+                                                            $q->where('fase_kelas_id', $fase->id);
+                                                        })->where('status', 'hadir')->count();
+                                        $persentaseHadir = round(($totalHadir / $totalPertemuan) * 100);
+                                        $persentaseHadir = $persentaseHadir > 100 ? 100 : $persentaseHadir;
                                     @endphp
 
-                                    <div class="space-y-2 border-t border-blue-200 pt-3">
-                                        @if(empty($parameters))
-                                            <p class="text-xs text-gray-500 italic text-center">Kriteria penilaian belum diatur.</p>
-                                        @else
-                                            @foreach($parameters as $param)
+                                    <div class="bg-blue-50 rounded-xl p-5 border border-blue-200" x-data="{ openFase: {{ $loop->first ? 'true' : 'false' }} }">
+                                        <button @click="openFase = !openFase" class="w-full text-left">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <p class="text-[10px] font-black text-blue-800 uppercase tracking-widest flex items-center gap-2">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                    Fase: {{ $fase->nama_fase }}
+                                                </p>
+                                                <svg :class="{'rotate-180': openFase}" class="w-4 h-4 text-blue-800 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            </div>
+                                            
+                                            <!-- PROGRESS BAR MINI -->
+                                            <div class="flex justify-between text-[10px] font-bold mb-1">
+                                                <span class="text-blue-900">Progres Kehadiran</span>
+                                                <span class="text-blue-900">{{ $persentaseHadir }}%</span>
+                                            </div>
+                                            <div class="w-full bg-blue-200 rounded-full h-1.5 mb-2">
+                                                <div class="{{ $persentaseHadir >= 80 ? 'bg-green-500' : 'bg-blue-500' }} h-full rounded-full transition-all duration-1000" style="width: {{ $persentaseHadir }}%"></div>
+                                            </div>
+                                        </button>
+
+                                        <!-- DETAIL NILAI FASE (ACCORDION) -->
+                                        <div x-show="openFase" style="display: none;" class="mt-4 border-t border-blue-200 pt-4 space-y-3">
+                                            @if(!$nilaiFase || $nilaiFase->status_kelulusan == 'belum_dinilai')
+                                                <div class="text-center p-3 bg-white rounded-lg border border-blue-100 shadow-sm">
+                                                    <p class="text-xs text-blue-800 font-bold italic">Belum ada evaluasi untuk fase ini.</p>
+                                                </div>
+                                            @else
                                                 @php
-                                                    $kriteriaData = $detailNilai[$param] ?? null;
-                                                    $skor = is_array($kriteriaData) ? ($kriteriaData['skor'] ?? '-') : (is_numeric($kriteriaData) ? $kriteriaData : '-');
-                                                    $catatan = is_array($kriteriaData) ? ($kriteriaData['catatan'] ?? '') : '';
+                                                    $parameters = $kelasAktif->kelas?->programPelatihan?->parameter_penilaian ?? [];
+                                                    $detailNilai = $nilaiFase->detail_nilai ?? [];
                                                 @endphp
-                                                <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                                    <div class="flex justify-between items-center text-sm">
-                                                        <span class="font-bold text-gray-700">{{ $param }}</span>
-                                                        <span class="font-black text-hitam bg-gray-100 px-2 py-0.5 rounded">{{ $skor }}</span>
-                                                    </div>
-                                                    @if(!empty($catatan))
-                                                        <div class="mt-2 text-xs text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-100 flex items-start gap-1.5">
-                                                            <svg class="w-3.5 h-3.5 text-yellow-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                            <span class="italic leading-tight">"{{ $catatan }}"</span>
+                                                
+                                                <div class="space-y-2">
+                                                    @foreach($parameters as $param)
+                                                        @php
+                                                            $kriteriaData = $detailNilai[$param] ?? null;
+                                                            $skor = is_array($kriteriaData) ? ($kriteriaData['skor'] ?? '-') : (is_numeric($kriteriaData) ? $kriteriaData : '-');
+                                                            $catatan = is_array($kriteriaData) ? ($kriteriaData['catatan'] ?? '') : '';
+                                                        @endphp
+                                                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                                                            <div class="flex justify-between items-center text-sm">
+                                                                <span class="font-bold text-gray-700">{{ $param }}</span>
+                                                                <span class="font-black text-hitam bg-gray-100 px-2 py-0.5 rounded">{{ $skor }}</span>
+                                                            </div>
+                                                            @if(!empty($catatan))
+                                                                <div class="mt-2 text-[10px] text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-100 flex items-start gap-1">
+                                                                    <span class="italic leading-tight">"{{ $catatan }}"</span>
+                                                                </div>
+                                                            @endif
                                                         </div>
+                                                    @endforeach
+                                                </div>
+
+                                                <div class="flex justify-between items-center text-sm mt-3 pt-3 border-t border-blue-200">
+                                                    <span class="font-black text-blue-900 uppercase tracking-wider text-[10px]">Rata-rata</span>
+                                                    <span class="font-black text-blue-700 text-lg">{{ $nilaiFase->nilai_rata_rata ?? 0 }}</span>
+                                                </div>
+
+                                                @if(!empty($nilaiFase->catatan_instruktur))
+                                                    <div class="bg-blue-100 p-3 rounded-lg border border-blue-200 mt-2">
+                                                        <span class="text-[9px] font-bold text-blue-800 uppercase block mb-1">Catatan Instruktur:</span>
+                                                        <p class="text-[11px] text-blue-900 font-medium leading-relaxed">"{{ $nilaiFase->catatan_instruktur }}"</p>
+                                                    </div>
+                                                @endif
+
+                                                <div class="pt-3 mt-2 border-t border-blue-200 flex justify-between items-center">
+                                                    <span class="font-bold text-blue-900 text-xs">Status Fase</span>
+                                                    @if($nilaiFase->status_kelulusan == 'lulus')
+                                                        <span class="bg-green-500 text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider shadow-sm">LULUS</span>
+                                                    @elseif($nilaiFase->status_kelulusan == 'tidak_lulus')
+                                                        <span class="bg-red-500 text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider shadow-sm">GAGAL</span>
                                                     @endif
                                                 </div>
-                                            @endforeach
-                                        @endif
-                                    </div>
-
-                                    <div class="flex justify-between items-center text-sm mt-3 pt-3 border-t border-blue-200">
-                                        <span class="font-black text-blue-900 uppercase tracking-wider text-[10px]">Nilai Rata-rata</span>
-                                        <span class="font-black text-blue-700 text-lg">{{ $kelasAktif->nilai_rata_rata ?? 0 }}</span>
-                                    </div>
-
-                                    @if(!empty($catatanAkhir))
-                                        <div class="bg-blue-100 p-3 rounded-lg border border-blue-200">
-                                            <span class="text-[10px] font-bold text-blue-800 uppercase block mb-1">Catatan Kesimpulan:</span>
-                                            <p class="text-xs text-blue-900 font-medium leading-relaxed">"{{ $catatanAkhir }}"</p>
+                                            @endif
                                         </div>
-                                    @endif
-
-                                    <div class="pt-3 border-t border-blue-200 flex justify-between items-center">
-                                        <span class="font-bold text-blue-900 text-xs">Status Kelulusan</span>
-                                        @if($kelasAktif->status_kelulusan == 'lulus')
-                                            <span class="bg-green-500 text-white px-3 py-1 rounded text-xs font-black uppercase tracking-wider shadow-sm">LULUS</span>
-                                        @elseif($kelasAktif->status_kelulusan == 'tidak_lulus')
-                                            <span class="bg-red-500 text-white px-3 py-1 rounded text-xs font-black uppercase tracking-wider shadow-sm">GAGAL</span>
-                                        @else
-                                            <span class="bg-yellow-400 text-yellow-900 px-3 py-1 rounded text-xs font-black uppercase tracking-wider shadow-sm">PROSES</span>
-                                        @endif
                                     </div>
+                                @endforeach
                                 </div>
-                            </div>
+                            @else
+                                <div class="bg-yellow-50 rounded-xl p-5 border border-yellow-200 text-center">
+                                    <p class="text-xs font-bold text-yellow-800">Sistem Fase belum diatur oleh instruktur.</p>
+                                </div>
+                            @endif
                             
                             @if($kelasAktif->status_kelulusan == 'lulus')
-                            <div class="mt-4">
-                                @if(isset($detailNilai['nomor_sertifikat']))
+                            <div class="mt-6">
+                                @if(isset($kelasAktif->detail_nilai['nomor_sertifikat']))
                                     <a href="{{ route('peserta.sertifikat.index') }}" class="block w-full text-center bg-hitam text-white py-3 rounded-xl font-bold shadow-lg hover:bg-oranye transition flex justify-center items-center gap-2 transform hover:-translate-y-1">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Ambil Sertifikat Saya
+                                        Cetak Sertifikat Kelulusan
                                     </a>
                                 @else
-                                    <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-xl text-center shadow-sm">
+                                    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl text-center shadow-sm">
                                         <p class="text-[11px] font-bold text-yellow-800 uppercase tracking-widest mb-1">Status Sertifikat</p>
-                                        <p class="text-xs text-yellow-700">Anda telah lulus. Menunggu Admin memproses & menerbitkan nomor registrasi sertifikat Anda.</p>
+                                        <p class="text-xs text-yellow-700 font-medium">Selamat! Anda telah lulus seluruh Fase. Sistem sedang menunggu Admin untuk menerbitkan Nomor Seri Sertifikat Resmi Anda.</p>
                                     </div>
                                 @endif
                             </div>
@@ -146,107 +171,117 @@
                         </div>
                     </div>
 
+                    <!-- KONTEN KANAN: TIMELINE MATERI & PERTEMUAN -->
                     <div class="lg:col-span-2 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100">
                         <h4 class="font-black text-xl text-hitam mb-2 flex items-center gap-2">
                             <svg class="w-6 h-6 text-oranye" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Timeline Kehadiran & Materi
+                            Timeline Kelas Berdasarkan Fase
                         </h4>
-                        <p class="text-sm text-gray-500 mb-8 pb-4 border-b border-gray-100">Pantau kehadiran harian Anda dan unduh modul materi yang dilampirkan instruktur.</p>
+                        <p class="text-sm text-gray-500 mb-8 pb-4 border-b border-gray-100">Pantau kehadiran harian Anda dan unduh modul materi yang dilampirkan instruktur pada masing-masing fase.</p>
                         
-                        @if($kelasAktif->kelas?->pertemuan && $kelasAktif->kelas->pertemuan->count() > 0)
-                            <div class="relative border-l-2 border-dashed border-gray-300 ml-4 space-y-8 pb-8 mt-4">
-                                @foreach($kelasAktif->kelas->pertemuan as $pertemuan)
-                                    @php
-                                        // Cari data absensi untuk kehadiran
-                                        $absen = \App\Models\Absensi::where('pertemuan_id', $pertemuan->id)
-                                                    ->where('pendaftaran_id', $kelasAktif->id)
-                                                    ->first();
-                                                    
-                                        $sudahSelesai = \Carbon\Carbon::parse($pertemuan->tanggal)->isPast();
-                                        $hariIni = \Carbon\Carbon::parse($pertemuan->tanggal)->isToday();
-                                    @endphp
-                                    
-                                    <div class="relative pl-8 group">
-                                        <div class="absolute -left-[11px] top-1 w-5 h-5 rounded-full border-4 border-white shadow-sm flex items-center justify-center transition-colors duration-300 {{ $hariIni ? 'bg-oranye animate-pulse' : ($sudahSelesai ? 'bg-hitam' : 'bg-gray-300') }}"></div>
+                        @if($kelasAktif->kelas && $kelasAktif->kelas->fase->count() > 0)
+                            
+                            <div x-data="{ activeFase: '{{ $kelasAktif->kelas->fase->first()->id }}' }">
+                                <!-- TAB FASE -->
+                                <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                                    @foreach($kelasAktif->kelas->fase as $fase)
+                                        <button @click="activeFase = '{{ $fase->id }}'" 
+                                                :class="activeFase === '{{ $fase->id }}' ? 'bg-hitam text-white shadow-md scale-105' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                class="px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap">
+                                            {{ $fase->nama_fase }}
+                                        </button>
+                                    @endforeach
+                                </div>
+
+                                <!-- ISI TAB -->
+                                @foreach($kelasAktif->kelas->fase as $fase)
+                                    <div x-show="activeFase === '{{ $fase->id }}'" style="display: none;" class="animate-fade-in-up">
                                         
-                                        <div class="bg-white border {{ $hariIni ? 'border-oranye shadow-md' : 'border-gray-200 group-hover:border-gray-300' }} rounded-xl p-5 transition-all duration-300 relative">
-                                            
-                                            <div class="absolute -top-3 left-4 bg-white px-2">
-                                                <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border {{ $hariIni ? 'bg-orange-50 text-oranye border-oranye' : 'bg-gray-50 text-gray-500 border-gray-200' }}">
-                                                    {{ \Carbon\Carbon::parse($pertemuan->tanggal)->translatedFormat('l, d M Y') }}
-                                                </span>
+                                        @if($fase->pertemuan->count() > 0)
+                                            <div class="relative border-l-2 border-dashed border-gray-300 ml-4 space-y-8 pb-4 mt-2">
+                                                @foreach($fase->pertemuan as $pertemuan)
+                                                    @php
+                                                        $absen = \App\Models\Absensi::where('pertemuan_id', $pertemuan->id)->where('pendaftaran_id', $kelasAktif->id)->first();
+                                                        $sudahSelesai = \Carbon\Carbon::parse($pertemuan->tanggal)->isPast();
+                                                        $hariIni = \Carbon\Carbon::parse($pertemuan->tanggal)->isToday();
+                                                    @endphp
+                                                    
+                                                    <div class="relative pl-8 group">
+                                                        <div class="absolute -left-[11px] top-1 w-5 h-5 rounded-full border-4 border-white shadow-sm flex items-center justify-center transition-colors duration-300 {{ $hariIni ? 'bg-oranye animate-pulse' : ($sudahSelesai ? 'bg-hitam' : 'bg-gray-300') }}"></div>
+                                                        
+                                                        <div class="bg-white border {{ $hariIni ? 'border-oranye shadow-md' : 'border-gray-200 group-hover:border-gray-300' }} rounded-xl p-5 transition-all duration-300 relative">
+                                                            <div class="absolute -top-3 left-4 bg-white px-2">
+                                                                <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border {{ $hariIni ? 'bg-orange-50 text-oranye border-oranye' : 'bg-gray-50 text-gray-500 border-gray-200' }}">
+                                                                    {{ \Carbon\Carbon::parse($pertemuan->tanggal)->translatedFormat('l, d M Y') }}
+                                                                </span>
+                                                            </div>
+
+                                                            <h5 class="font-black text-lg text-hitam mt-2">{{ $pertemuan->judul_pertemuan }}</h5>
+                                                            
+                                                            <div class="mt-4 flex flex-col sm:flex-row gap-3">
+                                                                @if($absen && $absen->status != 'alpa')
+                                                                    <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 flex items-center gap-3 w-full sm:w-1/2">
+                                                                        <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 text-green-600">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p class="text-[10px] text-gray-500 font-bold uppercase">Status Presensi</p>
+                                                                            <p class="text-sm font-black text-hitam capitalize">{{ $absen->status }}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="bg-gray-50 px-4 py-3 rounded-lg border border-dashed border-gray-300 flex items-center gap-3 w-full sm:w-1/2">
+                                                                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center shrink-0">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p class="text-[10px] text-gray-500 font-bold uppercase">Status Presensi</p>
+                                                                            <p class="text-xs font-bold text-gray-400 italic">Belum Diabsen</p>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+
+                                                                @if($pertemuan->file_materi)
+                                                                    <a href="{{ asset('storage/' . $pertemuan->file_materi) }}" target="_blank" download class="bg-hitam hover:bg-gray-800 text-white px-4 py-3 rounded-lg border border-gray-800 flex items-center gap-3 transition group/btn w-full sm:w-1/2">
+                                                                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition transform shrink-0">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p class="text-[10px] text-gray-300 font-bold uppercase">Modul / Materi</p>
+                                                                            <p class="text-sm font-black">Unduh File</p>
+                                                                        </div>
+                                                                    </a>
+                                                                @else
+                                                                    <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 flex items-center gap-3 w-full sm:w-1/2 opacity-60 cursor-not-allowed">
+                                                                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center shrink-0">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p class="text-[10px] text-gray-500 font-bold uppercase">Modul / Materi</p>
+                                                                            <p class="text-xs font-bold text-gray-400 italic">Tidak ada file</p>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
                                             </div>
-
-                                            <h5 class="font-black text-lg text-hitam mt-2">{{ $pertemuan->judul_pertemuan }}</h5>
-                                            
-                                            <div class="mt-4 flex flex-col sm:flex-row gap-3">
-                                                
-                                                @if($absen && $absen->status != 'alpa')
-                                                    <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 flex items-center gap-3 w-full sm:w-1/2">
-                                                        <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 text-green-600">
-
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-[10px] text-gray-500 font-bold uppercase">Status Presensi</p>
-                                                            <p class="text-sm font-black text-hitam capitalize">{{ $absen->status }}</p>
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <div class="bg-gray-50 px-4 py-3 rounded-lg border border-dashed border-gray-300 flex items-center gap-3 w-full sm:w-1/2">
-                                                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center shrink-0">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-[10px] text-gray-500 font-bold uppercase">Status Presensi</p>
-                                                            <p class="text-xs font-bold text-gray-400 italic">Belum Diabsen</p>
-                                                        </div>
-                                                    </div>
-                                                @endif
-
-                                                @if($pertemuan->file_materi)
-                                                    <a href="{{ asset('storage/' . $pertemuan->file_materi) }}" target="_blank" download class="bg-hitam hover:bg-gray-800 text-white px-4 py-3 rounded-lg border border-gray-800 flex items-center gap-3 transition group/btn w-full sm:w-1/2">
-                                                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition transform shrink-0">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-[10px] text-gray-300 font-bold uppercase">Modul / Materi</p>
-                                                            <p class="text-sm font-black">Unduh File</p>
-                                                        </div>
-                                                    </a>
-                                                @else
-                                                    <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 flex items-center gap-3 w-full sm:w-1/2 opacity-60 cursor-not-allowed">
-                                                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center shrink-0">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-[10px] text-gray-500 font-bold uppercase">Modul / Materi</p>
-                                                            <p class="text-xs font-bold text-gray-400 italic">Tidak ada file</p>
-                                                        </div>
-                                                    </div>
-                                                @endif
-
+                                        @else
+                                            <div class="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                                                <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                <p class="text-gray-500 font-bold">Jadwal Belum Disusun</p>
+                                                <p class="text-xs text-gray-400 mt-1">Instruktur belum menambahkan jadwal kehadiran untuk Fase ini.</p>
                                             </div>
-                                            
-                                        </div>
+                                        @endif
                                     </div>
                                 @endforeach
-
-                                <div class="relative pl-8 pt-4">
-                                    <div class="absolute -left-[14px] bg-white w-7 h-7 rounded-full border-4 border-gray-300 shadow flex items-center justify-center">
-                                        <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                    </div>
-                                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center shadow-sm">
-                                        <h5 class="font-black text-blue-900">Evaluasi Akhir Instruktur</h5>
-                                        <p class="text-xs text-blue-700 mt-1">Lihat detail nilai dan catatan kelulusan pada Rapor di panel sebelah kiri.</p>
-                                    </div>
-                                </div>
                             </div>
                         @else
                             <div class="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                                 <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                <p class="text-gray-500 font-bold text-lg">Jadwal Belum Disusun</p>
-                                <p class="text-sm text-gray-400 mt-1">Instruktur belum menambahkan jadwal kehadiran untuk kelas Anda.</p>
+                                <p class="text-gray-500 font-bold text-lg">Menunggu Kurikulum Instruktur</p>
+                                <p class="text-sm text-gray-400 mt-1">Sistem fase dan kurikulum kelas sedang disiapkan oleh instruktur Anda.</p>
                             </div>
                         @endif
                     </div>

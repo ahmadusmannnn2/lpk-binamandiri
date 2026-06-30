@@ -23,4 +23,9 @@ class Pendaftaran extends Model
     {
         return $this->belongsTo(Kelas::class);
     }
+
+    public function nilaiFase()
+    {
+        return $this->hasMany(NilaiFase::class, 'pendaftaran_id');
+    }
 }
