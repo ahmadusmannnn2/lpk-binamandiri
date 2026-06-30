@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Instruktur;
 use App\Models\User;
+use App\Models\ProgramPelatihan; // Memanggil Model Program Pelatihan
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -20,7 +21,9 @@ class InstrukturController extends Controller
 
     public function create()
     {
-        return view('admin.instruktur.create');
+        // Mengambil data program untuk dijadikan Dropdown
+        $programs = ProgramPelatihan::all();
+        return view('admin.instruktur.create', compact('programs'));
     }
 
     public function store(Request $request)
@@ -31,7 +34,7 @@ class InstrukturController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'nomor_telepon' => 'nullable|string|max:20',
-            'spesialisasi_las' => 'nullable|string|max:255',
+            'keahlian' => 'required|string|max:255', // Diubah jadi wajib dan sesuai database
             'alamat' => 'nullable|string',
         ]);
 
@@ -47,7 +50,7 @@ class InstrukturController extends Controller
         Instruktur::create([
             'user_id' => $user->id,
             'nomor_telepon' => $request->nomor_telepon,
-            'spesialisasi_las' => $request->spesialisasi_las,
+            'keahlian' => $request->keahlian, // Menggunakan kolom keahlian
             'alamat' => $request->alamat,
         ]);
 
@@ -57,7 +60,9 @@ class InstrukturController extends Controller
     public function edit($id)
     {
         $instruktur = Instruktur::with('user')->findOrFail($id);
-        return view('admin.instruktur.edit', compact('instruktur'));
+        // Mengambil data program untuk dropdown di halaman edit
+        $programs = ProgramPelatihan::all();
+        return view('admin.instruktur.edit', compact('instruktur', 'programs'));
     }
 
     public function update(Request $request, $id)
@@ -70,7 +75,7 @@ class InstrukturController extends Controller
             // Pastikan email unik, kecuali untuk email user ini sendiri
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'nomor_telepon' => 'nullable|string|max:20',
-            'spesialisasi_las' => 'nullable|string|max:255',
+            'keahlian' => 'required|string|max:255', // Validasi keahlian
             'alamat' => 'nullable|string',
         ]);
 
@@ -91,7 +96,7 @@ class InstrukturController extends Controller
         // Update Instruktur
         $instruktur->update([
             'nomor_telepon' => $request->nomor_telepon,
-            'spesialisasi_las' => $request->spesialisasi_las,
+            'keahlian' => $request->keahlian, // Update menggunakan dropdown
             'alamat' => $request->alamat,
         ]);
 

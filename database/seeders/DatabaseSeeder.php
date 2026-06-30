@@ -8,14 +8,15 @@ use App\Models\User;
 use App\Models\Instruktur;
 use App\Models\ProgramPelatihan;
 use App\Models\Kelas;
-use App\Models\Peserta;
 use App\Models\Pengaturan;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. DATA PENGATURAN WEB (Agar tampilan website tidak hancur)
+        // ==========================================
+        // 1. DATA PENGATURAN WEB (Agar tampilan tidak hancur)
+        // ==========================================
         $pengaturan = [
             ['kunci' => 'hero_judul', 'nilai' => 'Creating Value For The World.'],
             ['kunci' => 'hero_deskripsi', 'nilai' => 'Kami percaya pada kekuatan transformatif dari koneksi. Mewujudkan visi Anda menjadi sumber daya Welder Profesional.'],
@@ -30,29 +31,39 @@ class DatabaseSeeder extends Seeder
             Pengaturan::create($p);
         }
 
-        // 2. AKUN ADMIN & INSTRUKTUR
+        // ==========================================
+        // 2. AKUN ADMIN
+        // ==========================================
         User::create([
-            'name' => 'Admin LPK Bina Mandiri',
+            'name' => 'Admin',
             'email' => 'admin@gmail.com',
-            'password' => Hash::make('password'), // Password: password
+            'password' => Hash::make('11111111'),
             'role' => 'admin',
+            'email_verified_at' => now(), // Bypass verifikasi email
         ]);
 
+        // ==========================================
+        // 3. AKUN & PROFIL INSTRUKTUR
+        // ==========================================
         $userInstruktur = User::create([
-            'name' => 'Bapak Doni Khojin',
+            'name' => 'Instruktur',
             'email' => 'instruktur@gmail.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('11111111'),
             'role' => 'instruktur',
+            'email_verified_at' => now(),
         ]);
 
         $instruktur = Instruktur::create([
             'user_id' => $userInstruktur->id,
+            'nip' => '198001012024011001',
             'nomor_telepon' => '081234567890',
-            'spesialisasi_las' => 'Pakar GTAW & SMAW',
-            'alamat' => 'Wonosobo, Jawa Tengah'
+            'keahlian' => 'Pakar GTAW & SMAW', // Disesuaikan dengan migration
+            'foto' => null
         ]);
 
-        // 3. PROGRAM PELATIHAN & OTOMATIS BIKIN 5 KELAS PER PROGRAM
+        // ==========================================
+        // 4. PROGRAM PELATIHAN & KELAS (Sebagai data awal)
+        // ==========================================
         $programs = [
             ['nama' => 'Sertifikasi Plat 3G (Kombinasi)', 'durasi' => 43, 'harga' => 24000000, 'desc' => 'Sertifikat: BNSP | Durasi: 43 hari'],
             ['nama' => 'GTAW (1F, 2F, 3F, 1G, 2G, 3G)', 'durasi' => 32, 'harga' => 19000000, 'desc' => 'Sertifikat: BNSP | Durasi: 32 hari'],
@@ -62,7 +73,6 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($programs as $prog) {
-            // Buat Program
             $programBaru = ProgramPelatihan::create([
                 'nama_program' => $prog['nama'],
                 'deskripsi' => $prog['desc'],
@@ -70,35 +80,15 @@ class DatabaseSeeder extends Seeder
                 'durasi_hari' => $prog['durasi'],
             ]);
 
-            // Bikin 5 Kelas untuk program ini
             for ($i = 1; $i <= 5; $i++) {
                 Kelas::create([
                     'program_pelatihan_id' => $programBaru->id,
                     'instruktur_id' => $instruktur->id,
-                    'nama_kelas' => 'Angkatan ' . $i . ' - ' . explode(' ', $prog['nama'])[0], // Nama otomatis
+                    'nama_kelas' => 'Angkatan ' . $i . ' - ' . explode(' ', $prog['nama'])[0],
                     'kuota_peserta' => 20,
-                    // Angkatan 1 dibuat berjalan, sisanya menunggu
                     'status_kelas' => ($i == 1) ? 'berjalan' : 'menunggu', 
                 ]);
             }
-        }
-
-        // 4. BUAT 10 AKUN PESERTA (Email: 1@gmail.com s/d 10@gmail.com)
-        $angkaText = ['Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh'];
-        
-        for ($i = 1; $i <= 10; $i++) {
-            $userPeserta = User::create([
-                'name' => 'Peserta ' . $angkaText[$i - 1],
-                'email' => $i . '@gmail.com',
-                'password' => Hash::make('password'), // Passwordnya sama semua: password
-                'role' => 'peserta',
-            ]);
-
-            // Buat tabel pesertanya sekalian dengan status belum_isi
-            Peserta::create([
-                'user_id' => $userPeserta->id,
-                'status_biodata' => 'belum_isi'
-            ]);
         }
     }
 }

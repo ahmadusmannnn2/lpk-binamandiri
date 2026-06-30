@@ -61,9 +61,9 @@ class PertemuanController extends Controller
     public function simpanAbsensi(Request $request, $id)
     {
         $request->validate([
-            'absensi.*.status' => 'required|in:hadir,izin,sakit,alpa',
-            'absensi.*.nilai' => 'nullable|numeric|min:0|max:100',
-            'absensi.*.catatan' => 'nullable|string|max:500',
+            'absensi.*.status' => 'required|in:hadir,alpa',
+            'absensi.*.nilai'  => 'nullable|numeric|min:0|max:100',
+            'absensi.*.catatan'=> 'nullable|string|max:500',
         ]);
 
         $pertemuan = Pertemuan::findOrFail($id);

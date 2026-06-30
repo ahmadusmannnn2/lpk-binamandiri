@@ -1,8 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-2xl text-hitam leading-tight">
-            {{ __('Edit Data Kelas / Angkatan') }}
-        </h2>
+        <div class="flex items-center gap-3">
+            <a href="{{ url()->previous() }}" class="text-gray-500 hover:text-oranye transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <h2 class="font-bold text-2xl text-hitam leading-tight">
+                {{ __('Edit Data Kelas / Angkatan') }}
+            </h2>
+        </div>
     </x-slot>
 
     <div class="py-12 bg-gray-50 min-h-screen">
@@ -73,13 +78,9 @@
                                     </div>
                                 </div>
                                 
-                                <div class="relative z-10">
-                                    <x-input-label for="status_kelas" :value="__('Update Status Kelas')" class="text-hitam font-bold text-sm" />
-                                    <select name="status_kelas" id="status_kelas" class="block mt-1 w-full border-white rounded-xl shadow-sm focus:border-oranye focus:ring-oranye transition" required>
-                                        <option value="menunggu" {{ $kelas->status_kelas == 'menunggu' ? 'selected' : '' }}>Menunggu (Pendaftaran Dibuka)</option>
-                                        <option value="berjalan" {{ $kelas->status_kelas == 'berjalan' ? 'selected' : '' }}>Berjalan (Sedang Berlangsung)</option>
-                                        <option value="selesai" {{ $kelas->status_kelas == 'selesai' ? 'selected' : '' }}>Selesai (Ditutup)</option>
-                                    </select>
+                                <div class="mt-3 p-3 bg-orange-100/50 rounded-lg text-[11px] text-oranye font-bold flex items-start gap-2">
+                                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <p>Status kelas ditentukan <strong>otomatis</strong> dari tanggal. Ubah tanggal mulai untuk mengubah status kelas.</p>
                                 </div>
                             </div>
                         </div>

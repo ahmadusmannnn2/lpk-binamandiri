@@ -31,20 +31,28 @@
             <!-- FILTER: COMPACT TOOLBAR -->
             <form action="{{ route('admin.laporan.index') }}" method="GET" class="mb-5 bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 items-center">
                 
+                <!-- Pencarian Nama -->
+                <div class="w-full md:w-1/5 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama Peserta..." class="w-full pl-9 border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm transition py-2" title="Cari Nama Peserta">
+                </div>
+
                 <!-- Tanggal Mulai -->
-                <div class="w-full md:w-1/6">
+                <div class="w-full md:w-[13%]">
                     <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm transition py-2" title="Tanggal Mulai">
                 </div>
                 
                 <!-- Tanggal Selesai -->
-                <div class="w-full md:w-1/6">
+                <div class="w-full md:w-[13%]">
                     <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm transition py-2" title="Tanggal Selesai">
                 </div>
                 
                 <!-- Filter Status -->
-                <div class="w-full md:w-1/4">
+                <div class="w-full md:w-1/5">
                     <select name="status" class="w-full border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm cursor-pointer transition py-2">
-                        <option value="">Semua Status Pembayaran</option>
+                        <option value="">Semua Status</option>
                         <option value="sukses" {{ request('status') == 'sukses' ? 'selected' : '' }}>🟢 Lunas</option>
                         <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>🟡 Pending</option>
                         <option value="batal" {{ request('status') == 'batal' ? 'selected' : '' }}>🔴 Batal</option>
@@ -52,9 +60,9 @@
                 </div>
                 
                 <!-- Filter Program -->
-                <div class="w-full md:w-1/4">
+                <div class="w-full md:w-1/5">
                     <select name="program" class="w-full border-gray-300 rounded-lg focus:border-oranye focus:ring-oranye text-sm cursor-pointer transition py-2">
-                        <option value="">Semua Program Pelatihan</option>
+                        <option value="">Semua Program</option>
                         @foreach($programs as $prog)
                             <option value="{{ $prog->id }}" {{ request('program') == $prog->id ? 'selected' : '' }}>{{ \Illuminate\Support\Str::limit($prog->nama_program, 20) }}</option>
                         @endforeach
@@ -66,7 +74,7 @@
                     <button type="submit" class="w-full md:w-auto bg-hitam text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition shadow">
                         Filter
                     </button>
-                    @if(request()->hasAny(['start_date', 'end_date', 'status', 'program']) && (request('start_date') != '' || request('end_date') != '' || request('status') != '' || request('program') != ''))
+                    @if(request()->hasAny(['search', 'start_date', 'end_date', 'status', 'program']) && (request('search') != '' || request('start_date') != '' || request('end_date') != '' || request('status') != '' || request('program') != ''))
                         <a href="{{ route('admin.laporan.index') }}" title="Reset Filter" class="flex items-center justify-center px-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-100 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </a>

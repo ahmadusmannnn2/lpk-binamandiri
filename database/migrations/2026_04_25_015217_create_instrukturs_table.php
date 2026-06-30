@@ -12,9 +12,14 @@ return new class extends Migration
             $table->id();
             // Menghubungkan instruktur dengan akun login (tabel users)
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            
+            // Kolom-kolom yang dibutuhkan oleh sistem
+            $table->string('nip', 50)->nullable();
             $table->string('nomor_telepon')->nullable();
-            $table->string('spesialisasi_las')->nullable(); // contoh: SMAW, GTAW, dll
-            $table->text('alamat')->nullable();
+            $table->string('keahlian')->nullable();
+            $table->string('foto')->nullable();
+            $table->text('alamat')->nullable(); // Tetap dibiarkan jika sewaktu-waktu dibutuhkan
+            
             $table->timestamps();
             $table->softDeletes();
         });

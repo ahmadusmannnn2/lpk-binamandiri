@@ -1,8 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-2xl text-hitam leading-tight">
-            {{ __('Tambah Instruktur & Akun Baru') }}
-        </h2>
+        <div class="flex items-center gap-3">
+            <a href="{{ url()->previous() }}" class="text-gray-500 hover:text-oranye transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <h2 class="font-bold text-2xl text-hitam leading-tight">
+                {{ __('Tambah Instruktur & Akun Baru') }}
+            </h2>
+        </div>
     </x-slot>
 
     <div class="py-12 bg-gray-50 min-h-screen">
@@ -13,7 +18,6 @@
                         @csrf
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             
-                            <!-- KIRI: INFORMASI AKUN -->
                             <div class="space-y-5 bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
                                 <div class="absolute -right-4 -top-4 opacity-5 pointer-events-none">
                                     <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
@@ -42,7 +46,6 @@
                                 </div>
                             </div>
 
-                            <!-- KANAN: PROFIL INSTRUKTUR -->
                             <div class="space-y-5 bg-orange-50 p-6 rounded-2xl border border-orange-100 shadow-sm relative overflow-hidden">
                                 <div class="absolute -right-4 -top-4 opacity-10 pointer-events-none">
                                     <svg class="w-32 h-32 text-oranye" fill="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
@@ -51,8 +54,16 @@
                                 <h3 class="font-black text-xl border-b border-orange-200 pb-3 text-oranye">Data Instruktur</h3>
                                 
                                 <div class="relative z-10">
-                                    <x-input-label for="spesialisasi_las" :value="__('Spesialisasi Keahlian')" class="text-hitam font-bold text-sm" />
-                                    <x-text-input id="spesialisasi_las" class="block mt-1 w-full focus:border-oranye focus:ring-oranye rounded-xl transition shadow-sm border-white" type="text" name="spesialisasi_las" :value="old('spesialisasi_las')" placeholder="Contoh: Welding Engineer, SMAW 3G" />
+                                    <x-input-label for="keahlian" :value="__('Spesialisasi Keahlian (Program)')" class="text-hitam font-bold text-sm" />
+                                    <select id="keahlian" name="keahlian" class="block mt-1 w-full border-white rounded-xl shadow-sm focus:border-oranye focus:ring-oranye transition p-2.5 text-sm" required>
+                                        <option value="" disabled selected>-- Pilih Program Pelatihan --</option>
+                                        @foreach($programs as $program)
+                                            <option value="{{ $program->nama_program }}" {{ old('keahlian') == $program->nama_program ? 'selected' : '' }}>
+                                                {{ $program->nama_program }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('keahlian')" class="mt-2" />
                                 </div>
                                 <div class="relative z-10">
                                     <x-input-label for="nomor_telepon" :value="__('Nomor WhatsApp / HP')" class="text-hitam font-bold text-sm" />

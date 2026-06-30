@@ -29,14 +29,25 @@
     <!-- Kop Surat -->
     @php
         $nama1 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_1')->value('nilai') ?? 'LPK';
-        $nama2 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_2')->value('nilai') ?? 'BINA';
-        $alamat = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? '-';
+        $nama2 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_2')->value('nilai') ?? 'BINA MANDIRI';
+        $alamat = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? 'Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah';
         $telepon = \App\Models\Pengaturan::where('kunci', 'kontak_telepon')->value('nilai') ?? '-';
+        $email   = \App\Models\Pengaturan::where('kunci', 'kontak_email')->value('nilai') ?? '-';
     @endphp
-    
-    <div class="border-b-4 border-gray-800 pb-4 mb-6 text-center">
-        <h1 class="text-3xl font-black uppercase">{{ $nama1 }} {{ $nama2 }}</h1>
-        <p class="text-sm mt-1">{{ $alamat }} | Telp: {{ $telepon }}</p>
+
+    <div style="border-bottom: 4px double #201e1f; padding-bottom: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px;">
+        <div style="width: 64px; height: 64px; background: #201e1f; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <span style="color: white; font-weight: 900; font-size: 14px; letter-spacing: 1px;">LPK</span>
+        </div>
+        <div>
+            <h1 style="font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; color: #201e1f; margin: 0;">
+                {{ $nama1 }} <span style="color: #de5e2e;">{{ $nama2 }}</span>
+            </h1>
+            <p style="font-size: 12px; font-weight: bold; color: #374151; margin: 2px 0;">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOMPETENSI PENGELASAN</p>
+            <p style="font-size: 11px; color: #6b7280; margin: 0;">
+                📍 {{ $alamat }} &nbsp;|&nbsp; 📞 {{ $telepon }} &nbsp;|&nbsp; ✉ {{ $email }}
+            </p>
+        </div>
     </div>
 
     <!-- Judul Laporan -->

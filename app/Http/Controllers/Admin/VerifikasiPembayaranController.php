@@ -16,15 +16,23 @@ class VerifikasiPembayaranController extends Controller
             ->orderBy('created_at', 'desc');
 
         $query->when($request->search, function ($q, $search) {
-            $orderId = str_replace(['LPK-', 'lpk-'], '', $search);
-            $q->where(function ($subQ) use ($search, $orderId) {
-                $subQ->where('id', $orderId) 
-                    ->orWhereHas('peserta.user', function ($userQ) use ($search) {
-                        $userQ->where('name', 'like', '%' . $search . '%'); 
-                    })
-                    ->orWhereHas('peserta', function ($pesertaQ) use ($search) {
-                        $pesertaQ->where('nik', 'like', '%' . $search . '%'); 
-                    });
+            $q->where(function ($subQ) use ($search) {
+                // Ekstrak ID jika formatnya mirip Order ID Midtrans (misal LPK-1-123456 jadi 1)
+                $orderId = null;
+                if (preg_match('/^(?:LPK-|lpk-)?(\d+)/', $search, $matches)) {
+                    $orderId = $matches[1];
+                }
+
+                if ($orderId) {
+                    $subQ->where('id', $orderId);
+                }
+
+                $subQ->orWhereHas('peserta.user', function ($userQ) use ($search) {
+                    $userQ->where('name', 'like', '%' . $search . '%'); 
+                })
+                ->orWhereHas('peserta', function ($pesertaQ) use ($search) {
+                    $pesertaQ->where('nik', 'like', '%' . $search . '%'); 
+                });
             });
         });
 
@@ -89,5 +97,14 @@ class VerifikasiPembayaranController extends Controller
             return back()->with('error', 'Kwitansi belum dapat dicetak karena pembayaran belum lunas.');
         }
         return view('admin.verifikasi_pembayaran.cetak', compact('pendaftaran'));
+    }
+
+    // 5. Fitur Hapus Pendaftaran (Admin Darurat)
+    public function destroy($id)
+    {
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran->delete();
+
+        return redirect()->route('admin.verifikasi_pembayaran.index')->with('success', 'Data pendaftaran peserta berhasil dihapus dari sistem.');
     }
 }

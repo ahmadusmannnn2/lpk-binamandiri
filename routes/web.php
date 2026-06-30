@@ -37,7 +37,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
         $stats = [
             'peserta' => \App\Models\Peserta::count(),
             'instruktur' => \App\Models\Instruktur::count(),
-            'kelas_berjalan' => \App\Models\Kelas::where('status_kelas', 'berjalan')->count(),
+            'kelas_berjalan' => \App\Models\Kelas::where('tanggal_mulai', '<=', now()->toDateString())->where('tanggal_selesai', '>=', now()->toDateString())->count(),
             // Ubah counter menunggu_verifikasi untuk menghitung biodata yang menunggu
             'menunggu_verifikasi' => \App\Models\Peserta::where('status_biodata', 'menunggu')->count(),
         ];
@@ -85,6 +85,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     
     Route::put('/verifikasi-pembayaran/{id}', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'update'])->name('verifikasi_pembayaran.update');
     Route::get('/verifikasi-pembayaran/{id}/cetak-kwitansi', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'cetakKwitansi'])->name('verifikasi_pembayaran.cetak_kwitansi');
+    Route::delete('/verifikasi-pembayaran/{id}', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'destroy'])->name('verifikasi_pembayaran.destroy');
 
     // Laporan
     Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'index'])->name('laporan.index');
@@ -173,7 +174,7 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
                 ->where('peserta_id', $peserta->id)
                 ->where('status_pendaftaran', 'disetujui')
                 ->whereHas('kelas', function ($q) {
-                    $q->whereIn('status_kelas', ['menunggu', 'berjalan']);
+                    $q->where('tanggal_selesai', '>=', now()->toDateString());
                 })->first();
         }
         return view('peserta.dashboard', compact('peserta', 'kelasAktif'));
@@ -195,6 +196,7 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
     Route::get('/riwayat-pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'riwayat'])->name('riwayat.index');
     Route::get('/riwayat-pendaftaran/{id}/detail', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'showRiwayat'])->name('riwayat.show');
     Route::get('/riwayat-pendaftaran/{id}/cetak', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'cetakKwitansi'])->name('riwayat.cetak');
+    Route::delete('/riwayat-pendaftaran/{id}', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'destroy'])->name('riwayat.destroy');
     
     Route::get('/materi', [\App\Http\Controllers\Peserta\MateriController::class, 'index'])->name('materi.index');
     Route::get('/sertifikat', [\App\Http\Controllers\Peserta\SertifikatController::class, 'index'])->name('sertifikat.index');

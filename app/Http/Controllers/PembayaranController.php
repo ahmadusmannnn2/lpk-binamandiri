@@ -10,10 +10,17 @@ class PembayaranController extends Controller
 {
     public function bayar($id)
     {
+        $peserta = Auth::user()->peserta;
+
+        // Cegah error jika user belum mengisi biodata
+        if (!$peserta) {
+            return redirect()->route('peserta.biodata.index')->with('error', 'Silakan lengkapi biodata terlebih dahulu.');
+        }
+
         // 1. Cari data pendaftaran milik user yang sedang login
         $pendaftaran = Pendaftaran::with('kelas.programPelatihan')
             ->where('id', $id)
-            ->where('peserta_id', Auth::user()->peserta->id)
+            ->where('peserta_id', $peserta->id)
             ->firstOrFail();
 
         // 2. Jika sudah lunas, kembalikan ke halaman sebelumnya

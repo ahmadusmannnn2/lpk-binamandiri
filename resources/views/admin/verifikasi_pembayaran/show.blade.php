@@ -97,6 +97,19 @@
                         </div>
                     @endif
 
+                    <!-- TOMBOL HAPUS (ADMIN) -->
+                    <div class="border-t border-gray-200 pt-6 mt-6">
+                        <p class="text-xs font-bold text-red-500 mb-4 uppercase tracking-wider">Aksi Berbahaya</p>
+                        <form action="{{ route('admin.verifikasi_pembayaran.destroy', $pendaftaran->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" onclick="return confirm('PERINGATAN: Apakah Anda yakin ingin menghapus data pendaftaran ini? Semua tagihan terkait juga akan terhapus secara permanen dari sistem.');" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-3 rounded-xl font-bold transition shadow flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Hapus Pendaftaran
+                            </button>
+                        </form>
+                    </div>
+
                 </div>
             </div>
 

@@ -80,7 +80,7 @@
                         <td class="py-2 font-bold text-gray-600">Waktu Pembayaran</td>
                         <td class="py-2 font-bold">:</td>
                         <td class="py-2 font-medium text-gray-700">
-                            {{ $pendaftaran->waktu_pembayaran ? \Carbon\Carbon::parse($pendaftaran->waktu_pembayaran)->format('d F Y - H:i:s') . ' WIB' : \Carbon\Carbon::parse($pendaftaran->updated_at)->format('d F Y - H:i:s') . ' WIB' }}
+                            {{ $pendaftaran->waktu_pembayaran ? \Carbon\Carbon::parse($pendaftaran->waktu_pembayaran)->timezone(config('app.timezone', 'Asia/Jakarta'))->translatedFormat('d F Y - H:i:s') . ' WIB' : \Carbon\Carbon::parse($pendaftaran->updated_at)->timezone(config('app.timezone', 'Asia/Jakarta'))->translatedFormat('d F Y - H:i:s') . ' WIB' }}
                         </td>
                     </tr>
                 </tbody>

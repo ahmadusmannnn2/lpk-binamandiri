@@ -63,7 +63,16 @@
                     <div>
                         <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Status & Kuota</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="bg-oranye/20 text-oranye border border-oranye/30 px-2 py-1 rounded text-xs font-black uppercase">{{ $kelas->status_kelas }}</span>
+                            @php
+                                $today = now()->toDateString();
+                            @endphp
+                            @if($kelas->tanggal_mulai && $kelas->tanggal_mulai > $today)
+                                <span class="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-2 py-1 rounded text-xs font-black uppercase">Akan Datang</span>
+                            @elseif($kelas->tanggal_selesai && $kelas->tanggal_selesai < $today)
+                                <span class="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded text-xs font-black uppercase">Selesai</span>
+                            @else
+                                <span class="bg-green-500/20 text-green-300 border border-green-500/30 px-2 py-1 rounded text-xs font-black uppercase">Berjalan</span>
+                            @endif
                             <span class="font-bold text-sm">{{ $pendaftaran->count() }} / {{ $kelas->kuota_peserta }}</span>
                         </div>
                     </div>

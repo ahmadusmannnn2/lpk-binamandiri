@@ -46,28 +46,52 @@
                             <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Pendidikan Terakhir</p>
                             <p class="font-medium text-gray-800">{{ $peserta->pendidikan_terakhir ?? '-' }}</p>
                         </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Status Perkawinan</p>
+                            <p class="font-medium text-gray-800">{{ $peserta->status_perkawinan ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Perusahaan Terakhir</p>
+                            <p class="font-medium text-gray-800">{{ $peserta->perusahaan_terakhir ?? '-' }}</p>
+                        </div>
                         <div class="sm:col-span-2">
-                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Alamat Lengkap</p>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Alamat KTP</p>
                             <p class="font-medium text-gray-800">{{ $peserta->alamat ?? '-' }}</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Alamat Domisili</p>
+                            <p class="font-medium text-gray-800">{{ $peserta->alamat_domisili ?? '-' }}</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Pengalaman Bekerja</p>
+                            <p class="font-medium text-gray-800 whitespace-pre-line">{{ $peserta->pengalaman_bekerja ?? '-' }}</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Keperluan Mendaftar</p>
+                            <p class="font-medium text-gray-800 whitespace-pre-line">{{ $peserta->keperluan_mendaftar ?? '-' }}</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Rekomendasi / Referensi Dari</p>
+                            <p class="font-medium text-gray-800">{{ $peserta->rekomendasi_dari ?? '-' }}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- PANEL LAMPIRAN 3 BERKAS -->
+                <!-- PANEL LAMPIRAN DOKUMEN -->
                 <div class="bg-white shadow-lg rounded-2xl p-8">
                     <h3 class="font-black text-lg text-hitam border-b pb-3 mb-6">Lampiran Dokumen</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         
                         <!-- Pas Foto -->
                         <div class="border rounded-xl p-3 text-center bg-gray-50 hover:border-oranye transition duration-300">
                             <p class="text-sm font-bold text-hitam mb-2">Pas Foto</p>
                             @if($peserta->pas_foto)
-                                <a href="{{ asset('storage/'.$peserta->pas_foto) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative">
+                                <a href="{{ asset('storage/'.$peserta->pas_foto) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-36 group relative">
                                     <img src="{{ asset('storage/'.$peserta->pas_foto) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white text-xs font-bold">Perbesar</div>
                                 </a>
                             @else
-                                <div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
+                                <div class="w-full h-36 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
                             @endif
                         </div>
 
@@ -75,12 +99,12 @@
                         <div class="border rounded-xl p-3 text-center bg-gray-50 hover:border-oranye transition duration-300">
                             <p class="text-sm font-bold text-hitam mb-2">Scan KTP</p>
                             @if($peserta->file_ktp)
-                                <a href="{{ asset('storage/'.$peserta->file_ktp) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative">
+                                <a href="{{ asset('storage/'.$peserta->file_ktp) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-36 group relative">
                                     <img src="{{ asset('storage/'.$peserta->file_ktp) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white text-xs font-bold">Perbesar</div>
                                 </a>
                             @else
-                                <div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
+                                <div class="w-full h-36 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
                             @endif
                         </div>
 
@@ -88,11 +112,11 @@
                         <div class="border rounded-xl p-3 text-center bg-gray-50 hover:border-oranye transition duration-300">
                             <p class="text-sm font-bold text-hitam mb-2">Scan Ijazah</p>
                             @if($peserta->file_ijazah)
-                                <a href="{{ asset('storage/'.$peserta->file_ijazah) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-48 group relative bg-white">
+                                <a href="{{ asset('storage/'.$peserta->file_ijazah) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-36 group relative bg-white">
                                     @if(pathinfo($peserta->file_ijazah, PATHINFO_EXTENSION) == 'pdf')
                                         <div class="w-full h-full flex flex-col items-center justify-center text-red-500">
-                                            <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.25 17.292l-4.5-4.364 1.857-1.857 2.643 2.506 5.643-5.784 1.857 1.857-7.5 7.642z"/></svg>
-                                            <span class="mt-2 text-xs font-bold text-gray-700">File PDF</span>
+                                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                            <span class="mt-1 text-xs font-bold text-gray-700">File PDF</span>
                                         </div>
                                     @else
                                         <img src="{{ asset('storage/'.$peserta->file_ijazah) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
@@ -100,7 +124,27 @@
                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white text-xs font-bold">Buka Berkas</div>
                                 </a>
                             @else
-                                <div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
+                                <div class="w-full h-36 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
+                            @endif
+                        </div>
+
+                        <!-- Sertifikat Pendukung -->
+                        <div class="border rounded-xl p-3 text-center bg-gray-50 hover:border-oranye transition duration-300">
+                            <p class="text-sm font-bold text-hitam mb-2">Sertifikat Pendukung</p>
+                            @if($peserta->file_sertifikat_pendukung)
+                                <a href="{{ asset('storage/'.$peserta->file_sertifikat_pendukung) }}" target="_blank" class="block overflow-hidden rounded-lg shadow-sm border border-gray-300 h-36 group relative bg-white">
+                                    @if(pathinfo($peserta->file_sertifikat_pendukung, PATHINFO_EXTENSION) == 'pdf')
+                                        <div class="w-full h-full flex flex-col items-center justify-center text-red-500">
+                                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                            <span class="mt-1 text-xs font-bold text-gray-700">File PDF</span>
+                                        </div>
+                                    @else
+                                        <img src="{{ asset('storage/'.$peserta->file_sertifikat_pendukung) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                                    @endif
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300 text-white text-xs font-bold">Buka Berkas</div>
+                                </a>
+                            @else
+                                <div class="w-full h-36 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-sm italic">Belum diunggah</div>
                             @endif
                         </div>
 

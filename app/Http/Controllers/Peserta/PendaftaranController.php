@@ -64,7 +64,7 @@ class PendaftaranController extends Controller
         
         $kelas = Kelas::with('instruktur.user')
                     ->where('program_pelatihan_id', $program_id) 
-                    ->where('status_kelas', 'menunggu') 
+                    ->where('tanggal_mulai', '>=', now()->toDateString()) // Hanya kelas yang belum mulai
                     ->get();
 
         $peserta = Auth::user()->peserta;
@@ -150,6 +150,10 @@ class PendaftaranController extends Controller
     {
         $peserta = Auth::user()->peserta;
 
+        if (!$peserta) {
+            return redirect()->route('peserta.biodata.index')->with('error', 'Silakan lengkapi biodata terlebih dahulu.');
+        }
+
         // Ambil data pendaftaran (Hanya milik peserta yang sedang login!)
         $pendaftaran = Pendaftaran::with(['kelas.programPelatihan'])
             ->where('id', $id)
@@ -164,6 +168,10 @@ class PendaftaranController extends Controller
     {
         $peserta = Auth::user()->peserta;
 
+        if (!$peserta) {
+            return redirect()->route('peserta.biodata.index')->with('error', 'Silakan lengkapi biodata terlebih dahulu.');
+        }
+
         // Ambil data (Keamanan ekstra: pastikan ini milik peserta yang login)
         $pendaftaran = Pendaftaran::with(['kelas.programPelatihan', 'peserta.user'])
             ->where('id', $id)
@@ -175,5 +183,28 @@ class PendaftaranController extends Controller
         }
 
         return view('peserta.riwayat.cetak', compact('pendaftaran'));
+    }
+
+    // FITUR BARU: Menghapus pendaftaran yang belum lunas (Peserta)
+    public function destroy($id)
+    {
+        $peserta = Auth::user()->peserta;
+
+        if (!$peserta) {
+            return redirect()->route('peserta.biodata.index')->with('error', 'Silakan lengkapi biodata terlebih dahulu.');
+        }
+
+        $pendaftaran = Pendaftaran::where('id', $id)
+            ->where('peserta_id', $peserta->id)
+            ->firstOrFail();
+
+        // Peserta tidak boleh menghapus yang sudah lunas
+        if ($pendaftaran->status_pembayaran === 'sukses') {
+            return back()->with('error', 'Gagal! Pendaftaran yang sudah lunas tidak dapat dibatalkan.');
+        }
+
+        $pendaftaran->delete();
+
+        return redirect()->route('peserta.riwayat.index')->with('success', 'Pendaftaran kelas berhasil dibatalkan dan dihapus.');
     }
 }

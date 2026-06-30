@@ -61,22 +61,23 @@
                                         </td>
                                         
                                         <td class="py-4 px-4">
-                                            <div class="flex justify-center space-x-3 bg-gray-100 p-2 rounded-lg border border-gray-200">
-                                                <label class="flex items-center space-x-1 cursor-pointer group">
-                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="hadir" {{ $absen->status == 'hadir' ? 'checked' : '' }} class="text-green-600 focus:ring-green-500 w-4 h-4">
-                                                    <span class="text-xs font-bold text-gray-600 group-hover:text-green-700">Hadir</span>
+                                            <div class="flex justify-center gap-3">
+                                                <label class="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border-2 transition-all duration-200
+                                                    {{ $absen->status == 'hadir' ? 'bg-green-100 border-green-500 text-green-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-green-300' }}">
+                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="hadir"
+                                                        {{ $absen->status == 'hadir' ? 'checked' : '' }}
+                                                        class="hidden" onchange="this.closest('td').querySelectorAll('label').forEach(l=>l.classList.remove('bg-green-100','border-green-500','text-green-800','bg-red-100','border-red-500','text-red-800'));this.closest('td').querySelectorAll('label').forEach(l=>l.classList.add('bg-gray-50','border-gray-200','text-gray-500'));this.closest('label').classList.remove('bg-gray-50','border-gray-200','text-gray-500');this.closest('label').classList.add('bg-green-100','border-green-500','text-green-800');">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                    <span class="text-sm font-bold">Hadir</span>
                                                 </label>
-                                                <label class="flex items-center space-x-1 cursor-pointer group">
-                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="izin" {{ $absen->status == 'izin' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500 w-4 h-4">
-                                                    <span class="text-xs font-bold text-gray-600 group-hover:text-blue-700">Izin</span>
-                                                </label>
-                                                <label class="flex items-center space-x-1 cursor-pointer group">
-                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="sakit" {{ $absen->status == 'sakit' ? 'checked' : '' }} class="text-yellow-600 focus:ring-yellow-500 w-4 h-4">
-                                                    <span class="text-xs font-bold text-gray-600 group-hover:text-yellow-700">Sakit</span>
-                                                </label>
-                                                <label class="flex items-center space-x-1 cursor-pointer group">
-                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="alpa" {{ $absen->status == 'alpa' ? 'checked' : '' }} class="text-red-600 focus:ring-red-500 w-4 h-4">
-                                                    <span class="text-xs font-bold text-gray-600 group-hover:text-red-700">Alpa</span>
+
+                                                <label class="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border-2 transition-all duration-200
+                                                    {{ $absen->status == 'alpa' ? 'bg-red-100 border-red-500 text-red-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-red-300' }}">
+                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="alpa"
+                                                        {{ $absen->status == 'alpa' ? 'checked' : '' }}
+                                                        class="hidden" onchange="this.closest('td').querySelectorAll('label').forEach(l=>l.classList.remove('bg-green-100','border-green-500','text-green-800','bg-red-100','border-red-500','text-red-800'));this.closest('td').querySelectorAll('label').forEach(l=>l.classList.add('bg-gray-50','border-gray-200','text-gray-500'));this.closest('label').classList.remove('bg-gray-50','border-gray-200','text-gray-500');this.closest('label').classList.add('bg-red-100','border-red-500','text-red-800');">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    <span class="text-sm font-bold">Alpa</span>
                                                 </label>
                                             </div>
                                         </td>

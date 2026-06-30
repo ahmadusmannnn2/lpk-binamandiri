@@ -183,8 +183,8 @@
                                                 
                                                 @if($absen && $absen->status != 'alpa')
                                                     <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 flex items-center gap-3 w-full sm:w-1/2">
-                                                        <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0
-                                                            {{ $absen->status == 'hadir' ? 'bg-green-100 text-green-600' : ($absen->status == 'izin' ? 'bg-blue-100 text-blue-600' : 'bg-yellow-100 text-yellow-600') }}">
+                                                        <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 text-green-600">
+
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                                         </div>
                                                         <div>

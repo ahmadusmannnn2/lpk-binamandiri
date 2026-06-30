@@ -23,11 +23,22 @@
         <button onclick="window.print()" class="bg-[#de5e2e] text-white px-6 py-2 rounded font-bold shadow hover:bg-[#c24b22]">🖨️ Cetak Dokumen</button>
     </div>
 
-    <div class="border-b-4 border-[#201e1f] pb-4 mb-6 flex justify-between items-center">
-        <div>
-            <h1 class="text-3xl font-black tracking-widest uppercase text-[#201e1f]">LPK <span class="text-[#de5e2e]">BINA MANDIRI</span></h1>
-            <p class="font-bold text-gray-700">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOPETENSI PENGELASAN</p>
-            <p class="text-xs text-gray-500 mt-1">Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah</p>
+    @php
+        $alamat_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? 'Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah';
+        $telepon_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_telepon')->value('nilai') ?? '-';
+        $email_cetak   = \App\Models\Pengaturan::where('kunci', 'kontak_email')->value('nilai') ?? '-';
+    @endphp
+
+    <div class="border-b-4 border-double border-[#201e1f] pb-4 mb-6">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 shrink-0 bg-[#201e1f] rounded-xl flex items-center justify-center">
+                <span class="text-white font-black text-xl">LPK</span>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black tracking-widest uppercase text-[#201e1f]">LPK <span class="text-[#de5e2e]">BINA MANDIRI</span></h1>
+                <p class="font-bold text-gray-700 text-sm">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOMPETENSI PENGELASAN</p>
+                <p class="text-xs text-gray-500 mt-0.5">📍 {{ $alamat_cetak }} &nbsp;|&nbsp; 📞 {{ $telepon_cetak }} &nbsp;|&nbsp; ✉ {{ $email_cetak }}</p>
+            </div>
         </div>
     </div>
 
@@ -111,14 +122,13 @@
             <p>Mengetahui,</p>
             <p class="font-bold">Pimpinan LPK Bina Mandiri</p>
             <div class="h-24"></div>
-            <p class="font-bold underline text-[#201e1f]">Hidayatus Sibyan, M.Kom</p>
-            <p class="text-xs text-gray-500">NIP. 1234567890</p>
+            <p class="font-bold underline text-[#201e1f]">( ................................................ )</p>
         </div>
         <div class="text-center w-64">
             <p>Wonosobo, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
             <p class="font-bold">Instruktur Pengampu</p>
             <div class="h-24"></div>
-            <p class="font-bold underline text-[#201e1f]">{{ $kelas?->instruktur?->user?->name ?? '.....................................' }}</p>
+            <p class="font-bold underline text-[#201e1f]">{{ $kelas?->instruktur?->user?->name ?? '( ................................................ )' }}</p>
             <p class="text-xs text-gray-500">Spesialisasi: {{ $kelas?->instruktur?->spesialisasi_las ?? '-' }}</p>
         </div>
     </div>

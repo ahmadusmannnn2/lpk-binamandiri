@@ -36,7 +36,7 @@
                                     <th class="py-4 px-6 rounded-tl-lg text-center w-12">No</th>
                                     <th class="py-4 px-6">Identitas Instruktur</th>
                                     <th class="py-4 px-6">Informasi Kontak</th>
-                                    <th class="py-4 px-6">Spesialisasi</th>
+                                    <th class="py-4 px-6">Keahlian (Program)</th>
                                     <th class="py-4 px-6 text-center rounded-tr-lg w-32">Aksi</th>
                                 </tr>
                             </thead>
@@ -53,7 +53,7 @@
                                         <div class="text-xs text-gray-500 mt-0.5">{{ $item->nomor_telepon ?? 'No HP belum diisi' }}</div>
                                     </td>
                                     <td class="py-4 px-6">
-                                        <span class="bg-orange-50 text-oranye px-3 py-1 rounded-full text-xs font-bold border border-orange-100">{{ $item->spesialisasi_las ?? 'Belum diisi' }}</span>
+                                        <span class="bg-orange-50 text-oranye px-3 py-1 rounded-full text-xs font-bold border border-orange-100">{{ $item->keahlian ?? 'Belum diisi' }}</span>
                                     </td>
                                     <td class="py-4 px-6 text-center">
                                         <div class="flex items-center justify-center space-x-2">

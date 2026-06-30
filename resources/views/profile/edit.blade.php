@@ -1,8 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-xl text-hitam leading-tight">
-            {{ __('Pengaturan Akun') }}
-        </h2>
+        <div class="flex items-center gap-3">
+            <a href="{{ url()->previous() }}" class="text-gray-500 hover:text-oranye transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <h2 class="font-bold text-xl text-hitam leading-tight">
+                {{ __('Pengaturan Akun') }}
+            </h2>
+        </div>
     </x-slot>
 
     <div class="py-12">

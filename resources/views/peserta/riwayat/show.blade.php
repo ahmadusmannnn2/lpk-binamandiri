@@ -69,9 +69,17 @@
                             <h4 class="font-black text-yellow-800 text-lg mb-1">BELUM DIBAYAR</h4>
                             <p class="text-xs text-yellow-700">Selesaikan pembayaran untuk mulai belajar.</p>
                         </div>
-                        <a href="{{ route('peserta.pembayaran.bayar', $pendaftaran->id) }}" class="w-full flex items-center justify-center gap-2 bg-hitam hover:bg-gray-800 text-white py-3 rounded-xl font-bold shadow-lg transition">
+                        <a href="{{ route('peserta.pembayaran.bayar', $pendaftaran->id) }}" class="w-full flex items-center justify-center gap-2 bg-hitam hover:bg-gray-800 text-white py-3 rounded-xl font-bold shadow-lg transition mb-3">
                             Lanjutkan Pembayaran
                         </a>
+                        <form action="{{ route('peserta.riwayat.destroy', $pendaftaran->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" onclick="return confirm('Apakah Anda yakin ingin membatalkan dan menghapus pendaftaran ini? Tindakan ini tidak dapat dibatalkan.')" class="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 py-3 rounded-xl font-bold transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Batalkan Pendaftaran
+                            </button>
+                        </form>
                     @endif
                 </div>
             </div>

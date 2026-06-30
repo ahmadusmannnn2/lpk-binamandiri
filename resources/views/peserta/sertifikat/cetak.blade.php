@@ -83,8 +83,7 @@
                     </div>
                     <p class="text-5xl text-blue-900 font-serif italic opacity-70 transform -rotate-6 select-none relative z-10">Disahkan</p>
                 </div>
-                <p class="font-black underline text-[#201e1f] text-lg">Hidayatus Sibyan, M.Kom</p>
-                <p class="text-xs text-gray-500 font-bold mt-1">NIP. 1234567890</p>
+                <p class="font-black underline text-[#201e1f] text-lg">Pimpinan LPK Bina Mandiri</p>
             </div>
         </div>
 

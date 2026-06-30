@@ -15,6 +15,12 @@ class LaporanController extends Controller
         $query = Pendaftaran::with(['peserta.user', 'kelas.programPelatihan'])
             ->orderBy('tanggal_daftar', 'desc');
 
+        $query->when($request->search, function ($q, $search) {
+            $q->whereHas('peserta.user', function ($userQ) use ($search) {
+                $userQ->where('name', 'like', '%' . $search . '%');
+            });
+        });
+
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('tanggal_daftar', [$request->start_date, $request->end_date]);
         } elseif ($request->filled('start_date')) {

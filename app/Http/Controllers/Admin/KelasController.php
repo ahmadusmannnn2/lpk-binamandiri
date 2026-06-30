@@ -13,17 +13,15 @@ class KelasController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil data program untuk dropdown filter
         $programs = ProgramPelatihan::all();
+        $today = now()->toDateString();
 
-        // Mulai Query Dasar (beserta relasi dan jumlah pendaftar yang disetujui)
         $query = Kelas::with(['programPelatihan', 'instruktur.user'])
             ->withCount(['pendaftaran' => function($q) {
                 $q->where('status_pendaftaran', 'disetujui');
-            }])
-            ->orderBy('created_at', 'desc');
+            }]);
 
-        // --- LOGIKA PENCARIAN (SEARCH) ---
+        // --- PENCARIAN ---
         $query->when($request->search, function ($q, $search) {
             $q->where('nama_kelas', 'like', '%' . $search . '%')
               ->orWhereHas('instruktur.user', function ($instrukturQ) use ($search) {
@@ -31,17 +29,34 @@ class KelasController extends Controller
               });
         });
 
-        // --- LOGIKA FILTER STATUS KELAS ---
-        $query->when($request->status, function ($q, $status) {
-            $q->where('status_kelas', $status);
+        // --- FILTER STATUS OTOMATIS DARI TANGGAL ---
+        $query->when($request->status, function ($q, $status) use ($today) {
+            if ($status === 'akan_datang') {
+                $q->where('tanggal_mulai', '>', $today);
+            } elseif ($status === 'berjalan') {
+                $q->where('tanggal_mulai', '<=', $today)->where('tanggal_selesai', '>=', $today);
+            } elseif ($status === 'selesai') {
+                $q->where('tanggal_selesai', '<', $today);
+            }
         });
 
-        // --- LOGIKA FILTER PROGRAM PELATIHAN ---
+        // --- FILTER PROGRAM ---
         $query->when($request->program, function ($q, $program) {
             $q->where('program_pelatihan_id', $program);
         });
 
-        // Eksekusi Query dengan Pagination (15 data per halaman)
+        // --- URUTAN ---
+        $urutan = $request->urutan ?? 'terbaru';
+        if ($urutan === 'terlama') {
+            $query->orderBy('created_at', 'asc');
+        } elseif ($urutan === 'mulai_asc') {
+            $query->orderBy('tanggal_mulai', 'asc');
+        } elseif ($urutan === 'mulai_desc') {
+            $query->orderBy('tanggal_mulai', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc'); // default: terbaru
+        }
+
         $kelas = $query->paginate(15)->withQueryString();
 
         return view('admin.kelas.index', compact('kelas', 'programs'));
@@ -59,33 +74,39 @@ class KelasController extends Controller
     {
         $request->validate([
             'program_pelatihan_id' => 'required|exists:program_pelatihan,id',
-            'instruktur_id' => 'required|exists:instruktur,id',
-            'nama_kelas' => 'required|string|max:255',
-            'kuota_peserta' => 'required|integer|min:1',
-            'tanggal_mulai' => 'required|date',
-            'status_kelas' => 'required|in:menunggu,berjalan,selesai',
+            'instruktur_id'        => 'required|exists:instruktur,id',
+            'nama_kelas'           => 'required|string|max:255',
+            'kuota_peserta'        => 'required|integer|min:1',
+            'tanggal_mulai'        => 'required|date',
         ]);
 
-        // Cari durasi hari dari program yang dipilih
         $program = ProgramPelatihan::findOrFail($request->program_pelatihan_id);
-        
-        // MANTRA CARBON: Tambah hari kerja (Senin-Jumat) dari tanggal mulai
-        // Dikurangi 1 karena hari H (tanggal mulai) sudah dihitung sebagai hari ke-1
+
         $tanggalSelesaiOtomatis = \Carbon\Carbon::parse($request->tanggal_mulai)
-                                    ->addWeekdays($program->durasi_hari - 1)
-                                    ->format('Y-m-d');
+            ->addWeekdays($program->durasi_hari - 1)
+            ->format('Y-m-d');
+
+        // Status kelas ditentukan otomatis dari tanggal
+        $today = now()->toDateString();
+        if ($request->tanggal_mulai > $today) {
+            $statusOtomatis = 'menunggu';
+        } elseif ($tanggalSelesaiOtomatis >= $today) {
+            $statusOtomatis = 'berjalan';
+        } else {
+            $statusOtomatis = 'selesai';
+        }
 
         Kelas::create([
             'program_pelatihan_id' => $request->program_pelatihan_id,
-            'instruktur_id' => $request->instruktur_id,
-            'nama_kelas' => $request->nama_kelas,
-            'kuota_peserta' => $request->kuota_peserta,
-            'tanggal_mulai' => $request->tanggal_mulai,
-            'tanggal_selesai' => $tanggalSelesaiOtomatis, // Auto Input!
-            'status_kelas' => $request->status_kelas,
+            'instruktur_id'        => $request->instruktur_id,
+            'nama_kelas'           => $request->nama_kelas,
+            'kuota_peserta'        => $request->kuota_peserta,
+            'tanggal_mulai'        => $request->tanggal_mulai,
+            'tanggal_selesai'      => $tanggalSelesaiOtomatis,
+            'status_kelas'         => $statusOtomatis,
         ]);
 
-        return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil ditambahkan! Tanggal selesai dihitung otomatis berdasarkan hari kerja (Senin-Jumat).');
+        return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil ditambahkan! Status dan tanggal selesai dihitung otomatis.');
     }
 
     public function edit($id)
@@ -101,32 +122,40 @@ class KelasController extends Controller
     {
         $request->validate([
             'program_pelatihan_id' => 'required|exists:program_pelatihan,id',
-            'instruktur_id' => 'required|exists:instruktur,id',
-            'nama_kelas' => 'required|string|max:255',
-            'kuota_peserta' => 'required|integer|min:1',
-            'tanggal_mulai' => 'required|date',
-            'status_kelas' => 'required|in:menunggu,berjalan,selesai',
+            'instruktur_id'        => 'required|exists:instruktur,id',
+            'nama_kelas'           => 'required|string|max:255',
+            'kuota_peserta'        => 'required|integer|min:1',
+            'tanggal_mulai'        => 'required|date',
         ]);
 
         $kelas = Kelas::findOrFail($id);
         $program = ProgramPelatihan::findOrFail($request->program_pelatihan_id);
-        
-        // Kalkulasi ulang jika tanggal mulai / programnya diubah
+
         $tanggalSelesaiOtomatis = \Carbon\Carbon::parse($request->tanggal_mulai)
-                                    ->addWeekdays($program->durasi_hari - 1)
-                                    ->format('Y-m-d');
+            ->addWeekdays($program->durasi_hari - 1)
+            ->format('Y-m-d');
+
+        // Status kelas dihitung ulang otomatis dari tanggal
+        $today = now()->toDateString();
+        if ($request->tanggal_mulai > $today) {
+            $statusOtomatis = 'menunggu';
+        } elseif ($tanggalSelesaiOtomatis >= $today) {
+            $statusOtomatis = 'berjalan';
+        } else {
+            $statusOtomatis = 'selesai';
+        }
 
         $kelas->update([
             'program_pelatihan_id' => $request->program_pelatihan_id,
-            'instruktur_id' => $request->instruktur_id,
-            'nama_kelas' => $request->nama_kelas,
-            'kuota_peserta' => $request->kuota_peserta,
-            'tanggal_mulai' => $request->tanggal_mulai,
-            'tanggal_selesai' => $tanggalSelesaiOtomatis, // Auto Input!
-            'status_kelas' => $request->status_kelas,
+            'instruktur_id'        => $request->instruktur_id,
+            'nama_kelas'           => $request->nama_kelas,
+            'kuota_peserta'        => $request->kuota_peserta,
+            'tanggal_mulai'        => $request->tanggal_mulai,
+            'tanggal_selesai'      => $tanggalSelesaiOtomatis,
+            'status_kelas'         => $statusOtomatis,
         ]);
 
-        return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil diperbarui! Tanggal selesai dihitung otomatis.');
+        return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil diperbarui! Status dihitung otomatis dari tanggal.');
     }
 
     public function destroy($id)
@@ -157,9 +186,10 @@ class KelasController extends Controller
             ->get();
 
         // Ambil daftar kelas lain (untuk opsi pemindahan peserta)
+        // Kelas tujuan pindah: yang belum selesai (tanggal_selesai >= hari ini)
         $kelasLain = Kelas::with('programPelatihan')
             ->where('id', '!=', $id)
-            ->whereIn('status_kelas', ['menunggu', 'berjalan'])
+            ->where('tanggal_selesai', '>=', now()->toDateString())
             ->get();
 
         return view('admin.kelas.show', compact('kelas', 'pendaftaran', 'kelasLain'));
