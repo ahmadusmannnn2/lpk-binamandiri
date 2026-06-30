@@ -96,8 +96,8 @@
                                                 </div>
                                             @else
                                                 @php
-                                                    $parameters = $kelasAktif->kelas?->programPelatihan?->parameter_penilaian ?? [];
                                                     $detailNilai = $nilaiFase->detail_nilai ?? [];
+                                                    $parameters = array_keys($detailNilai);
                                                 @endphp
                                                 
                                                 <div class="space-y-2">

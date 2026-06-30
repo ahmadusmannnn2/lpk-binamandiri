@@ -20,9 +20,27 @@ class ProgramPelatihan extends Model
     {
         return Attribute::make(
             get: fn ($value) => json_decode($value, true) ?? [],
-            set: fn ($value) => is_string($value) 
-                ? json_encode(array_values(array_filter(array_map('trim', explode(',', $value))))) 
-                : json_encode($value ?? []),
+            set: function ($value) {
+                if (empty($value)) return json_encode([]);
+                
+                $result = [];
+                // Jika input string (dipisah koma)
+                if (is_string($value)) {
+                    $result = explode(',', $value);
+                } 
+                // Jika input array (gabungan checkbox & teks tambahan)
+                elseif (is_array($value)) {
+                    foreach ($value as $item) {
+                        if (is_string($item)) {
+                            // Pecah lagi jika ada koma di dalam array teks tambahan
+                            $pieces = explode(',', $item);
+                            $result = array_merge($result, $pieces);
+                        }
+                    }
+                }
+                
+                return json_encode(array_values(array_filter(array_map('trim', $result))));
+            }
         );
     }
 }

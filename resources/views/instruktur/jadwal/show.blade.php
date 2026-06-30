@@ -26,10 +26,16 @@
                     </div>
                 </div>
                 <div class="relative z-10 mt-6 md:mt-0">
-                    <a href="{{ route('instruktur.jadwal.cetak', $kelas->id) }}" target="_blank" class="bg-oranye hover:bg-[#c24b22] text-white px-5 py-2.5 rounded-lg shadow-lg transition flex items-center gap-2 font-bold text-sm">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                        Cetak Laporan
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('instruktur.jadwal.rapor', $kelas->id) }}" class="bg-hitam hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg shadow-lg transition flex items-center gap-2 font-bold text-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            Rekap Rapor Akhir
+                        </a>
+                        <a href="{{ route('instruktur.jadwal.cetak', $kelas->id) }}" target="_blank" class="bg-oranye hover:bg-[#c24b22] text-white px-5 py-2.5 rounded-lg shadow-lg transition flex items-center gap-2 font-bold text-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            Cetak Laporan
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -37,11 +43,12 @@
             <div x-data="{ activeTab: '{{ $kelas->fase->isNotEmpty() ? $kelas->fase->first()->id : 'new' }}' }" class="mt-8">
                 
                 <!-- KONTROL TAB -->
-                <div class="flex flex-wrap items-center gap-2 mb-6 border-b-2 border-gray-200 pb-4">
+                <div class="flex flex-wrap items-center gap-2 mb-6 border-b-2 border-gray-200 pb-4 sortable-container" id="sortableFaseContainer">
                     @foreach($kelas->fase as $f)
-                        <button @click="activeTab = '{{ $f->id }}'" 
+                        <button data-id="{{ $f->id }}" @click="activeTab = '{{ $f->id }}'" 
                                 :class="activeTab === '{{ $f->id }}' ? 'bg-hitam text-white border-hitam shadow-md scale-105' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-hitam'"
-                                class="px-6 py-2.5 rounded-xl font-black text-sm uppercase tracking-wider border-2 transition-all duration-300 flex items-center gap-2">
+                                class="px-6 py-2.5 rounded-xl font-black text-sm uppercase tracking-wider border-2 transition-all duration-300 flex items-center gap-2 cursor-grab active:cursor-grabbing">
+                            <svg class="w-4 h-4 text-gray-400 cursor-move" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
                             Fase: {{ $f->nama_fase }}
                             @if($f->status == 'selesai')
                                 <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
@@ -71,8 +78,8 @@
                                             <input type="number" name="urutan" value="{{ $kelas->fase->count() + 1 }}" class="w-full text-sm rounded-lg border-gray-300 focus:border-oranye" required>
                                         </div>
                                         <div class="w-1/2">
-                                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Target Absen</label>
-                                            <input type="number" name="target_pertemuan" placeholder="Misal: 20" class="w-full text-sm rounded-lg border-gray-300 focus:border-oranye" required>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Estimasi Total Pertemuan (Target)</label>
+                                            <input type="number" name="target_pertemuan" value="1" min="1" class="w-full text-sm rounded-lg border-gray-300 focus:border-oranye focus:ring-oranye" required>
                                         </div>
                                     </div>
                                     <button type="submit" class="w-full bg-hitam text-white text-xs font-bold py-3 rounded-lg hover:bg-oranye transition shadow-md mt-2">Simpan Fase</button>
@@ -100,7 +107,43 @@
                                 <h4 class="font-black text-hitam text-lg">Ruang Kerja: Fase {{ $f->nama_fase }}</h4>
                                 <p class="text-xs text-gray-500 font-bold">Total Pertemuan Dibuat: {{ $f->pertemuan->count() }} / Target: {{ $f->target_pertemuan }}</p>
                             </div>
-                            <div>
+                            <div class="flex items-center gap-2">
+                                <div x-data="{ openEdit: false }">
+                                    <button @click="openEdit = true" class="p-2 text-gray-500 hover:text-oranye hover:bg-orange-50 rounded-lg transition" title="Edit Fase">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
+                                    <!-- Modal Edit Fase -->
+                                    <div x-show="openEdit" style="display: none;" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                                        <div @click.away="openEdit = false" class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm">
+                                            <h4 class="font-black text-hitam mb-4 text-lg border-b pb-2">Edit Fase</h4>
+                                            <form action="{{ route('instruktur.fase.update', $f->id) }}" method="POST">
+                                                @csrf @method('PUT')
+                                                <div class="space-y-3 mb-4">
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-gray-700 mb-1">Nama Fase</label>
+                                                        <input type="text" name="nama_fase" value="{{ $f->nama_fase }}" class="w-full text-sm rounded-lg border-gray-300 focus:border-oranye focus:ring-oranye" required>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-gray-700 mb-1">Estimasi Total Pertemuan</label>
+                                                        <input type="number" name="target_pertemuan" value="{{ $f->target_pertemuan }}" min="1" class="w-full text-sm rounded-lg border-gray-300 focus:border-oranye focus:ring-oranye" required>
+                                                    </div>
+                                                </div>
+                                                <div class="flex justify-end gap-2">
+                                                    <button type="button" @click="openEdit = false" class="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Batal</button>
+                                                    <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-hitam rounded-lg hover:bg-oranye transition shadow-md">Simpan Perubahan</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <form action="{{ route('instruktur.fase.destroy', $f->id) }}" method="POST" onsubmit="return confirm('PERINGATAN! Menghapus fase ini akan menghapus seluruh data jadwal, absensi, dan nilai rapor peserta di dalamnya. Anda yakin?');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Hapus Fase">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </form>
+
                                 <form action="{{ route('instruktur.fase.update_status', $f->id) }}" method="POST" class="flex items-center gap-2">
                                     @csrf @method('PUT')
                                     <select name="status" class="text-sm rounded-lg border-gray-300 font-bold {{ $f->status == 'selesai' ? 'text-green-600 bg-green-50' : 'text-oranye bg-orange-50' }}" onchange="this.form.submit()">
@@ -184,8 +227,16 @@
                         <div id="penilaian" class="bg-white overflow-hidden shadow-xl rounded-xl border border-gray-100 scroll-mt-24">
                             <div class="p-6 sm:p-8">
                                 @php
-                                    $parameters = $f->kriteria_penilaian ?? $kelas->programPelatihan->parameter_penilaian ?? [];
-                                    $defaultKriteria = ['Tata Bahasa', 'Kosakata (Goi)', 'Berbicara (Kaiwa)', 'Mendengar (Choukai)', 'Membaca (Dokkai)', 'Tugas / PR', 'Keaktifan', 'Ujian Lisan', 'Ujian Tulis'];
+                                    $parameters = $f->kriteria_penilaian ?? [];
+                                                  
+                                    $baseKriteria = [
+                                        '1F', '2F', '3F', '1G', '2G', '3G', '4G', 
+                                        'K3 Umum', 'Teori Dasar Las', 'Inspeksi Visual (VT)', 
+                                        'Tata Bahasa', 'Kosakata (Goi)', 'Berbicara (Kaiwa)', 
+                                        'Tugas / PR', 'Keaktifan', 'Ujian Lisan', 'Ujian Tulis'
+                                    ];
+                                    
+                                    $allKriteria = array_unique(array_merge($baseKriteria, $parameters));
                                 @endphp
 
                                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
@@ -203,17 +254,22 @@
                                                     <p class="text-xs text-gray-500 mb-4">Pilih aspek apa saja yang relevan untuk dinilai pada kurikulum fase ini.</p>
                                                     <form action="{{ route('instruktur.fase.update_kriteria', $f->id) }}" method="POST">
                                                         @csrf @method('PUT')
-                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                                            @foreach($defaultKriteria as $dk)
+                                                        <div class="grid grid-cols-2 gap-3 mb-4">
+                                                            @foreach($allKriteria as $dk)
                                                             <label class="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-orange-50 transition">
                                                                 <input type="checkbox" name="kriteria[]" value="{{ $dk }}" {{ in_array($dk, $parameters) ? 'checked' : '' }} class="rounded text-oranye focus:ring-oranye">
                                                                 <span class="font-bold text-xs">{{ $dk }}</span>
                                                             </label>
                                                             @endforeach
                                                         </div>
-                                                        <div class="mb-5">
-                                                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Kriteria Tambahan / Kustom (Opsional)</label>
-                                                            <input type="text" name="kriteria[]" placeholder="Contoh: Praktik Lapangan..." class="w-full text-sm font-bold rounded-lg border-gray-300 focus:border-oranye">
+                                                        <div class="mb-5 border-t border-gray-200 pt-4">
+                                                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Kriteria Tambahan (Opsional)</label>
+                                                            @php
+                                                                $customKriteria = array_diff($parameters, $baseKriteria);
+                                                                $customKriteriaStr = implode(', ', $customKriteria);
+                                                            @endphp
+                                                            <input type="text" name="kriteria[]" value="{{ $customKriteriaStr }}" placeholder="Contoh: Praktik Lapangan..." class="w-full text-sm font-bold rounded-lg border-gray-300 focus:border-oranye">
+                                                            <p class="text-[10px] text-gray-500 mt-1">Kriteria ini akan diubah menjadi checkbox setelah Anda menyimpannya.</p>
                                                         </div>
                                                         <div class="flex justify-end gap-2">
                                                             <button type="button" @click="openKriteria = false" class="px-5 py-2.5 text-xs font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Batal</button>
@@ -378,4 +434,52 @@
 
         </div>
     </div>
+    @push('scripts')
+    <!-- SortableJS untuk Drag and Drop Fase -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var el = document.getElementById('sortableFaseContainer');
+            if (el) {
+                var sortable = Sortable.create(el, {
+                    animation: 150,
+                    handle: '.cursor-move',
+                    ghostClass: 'opacity-50',
+                    onEnd: function (evt) {
+                        var itemEl = evt.item;
+                        var orderArray = [];
+                        
+                        // Kumpulkan semua data-id dalam urutan baru
+                        el.querySelectorAll('[data-id]').forEach(function(btn) {
+                            orderArray.push(btn.getAttribute('data-id'));
+                        });
+
+                        // Kirim ke server
+                        fetch("{{ route('instruktur.fase.reorder', $kelas->id) }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                "Accept": "application/json"
+                            },
+                            body: JSON.stringify({ order: orderArray })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.success) {
+                                // Tampilkan notifikasi kecil di pojok layar
+                                let notif = document.createElement('div');
+                                notif.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm z-50 animate-bounce';
+                                notif.innerHTML = '✅ Urutan Fase Berhasil Disimpan!';
+                                document.body.appendChild(notif);
+                                setTimeout(() => notif.remove(), 3000);
+                            }
+                        })
+                        .catch(error => console.error("Error reordering:", error));
+                    }
+                });
+            }
+        });
+    </script>
+    @endpush
 </x-app-layout>

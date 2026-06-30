@@ -58,16 +58,81 @@ class FaseKelasController extends Controller
             abort(403);
         }
 
-        $request->validate([
-            'kriteria' => 'required|array',
-            'kriteria.*' => 'string|max:255',
-        ]);
+        $rawKriteria = $request->kriteria ?? [];
+        $finalKriteria = [];
+        
+        foreach ($rawKriteria as $item) {
+            if (is_string($item)) {
+                $pieces = explode(',', $item);
+                $finalKriteria = array_merge($finalKriteria, $pieces);
+            }
+        }
+        
+        $finalKriteria = array_values(array_filter(array_map('trim', $finalKriteria)));
 
         $fase->update([
-            'kriteria_penilaian' => array_values(array_filter($request->kriteria))
+            'kriteria_penilaian' => $finalKriteria
         ]);
 
         return back()->with('success', 'Kriteria penilaian berhasil diatur!');
+    }
+
+    // Fungsi baru untuk Drag and Drop Reorder
+    public function reorder(Request $request, $kelas_id)
+    {
+        $kelas = Kelas::findOrFail($kelas_id);
+        if ($kelas->instruktur_id !== Auth::user()->instruktur->id) {
+            return response()->json(['error' => 'Akses ditolak'], 403);
+        }
+
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'exists:fase_kelas,id'
+        ]);
+
+        foreach ($request->order as $index => $fase_id) {
+            FaseKelas::where('id', $fase_id)->where('kelas_id', $kelas_id)->update([
+                'urutan' => $index + 1
+            ]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $fase = FaseKelas::findOrFail($id);
+        if ($fase->kelas->instruktur_id !== Auth::user()->instruktur->id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'nama_fase' => 'required|string|max:255',
+            'target_pertemuan' => 'required|integer|min:1',
+        ]);
+
+        $fase->update([
+            'nama_fase' => $request->nama_fase,
+            'target_pertemuan' => $request->target_pertemuan,
+        ]);
+
+        return back()->with('success', 'Fase berhasil diperbarui!');
+    }
+
+    public function destroy($id)
+    {
+        $fase = FaseKelas::findOrFail($id);
+        if ($fase->kelas->instruktur_id !== Auth::user()->instruktur->id) {
+            abort(403);
+        }
+
+        // Karena onDelete('cascade') di database belum dikonfigurasi untuk relasi ke nilai dan pertemuan, mari kita hapus manual untuk keamanan
+        $fase->pertemuan()->delete();
+        $fase->nilaiFase()->delete();
+        
+        $fase->delete();
+
+        return redirect()->back()->with('success', 'Fase beserta seluruh pertemuan dan penilaiannya berhasil dihapus!');
     }
     
     public function simpanNilai(Request $request, $id)

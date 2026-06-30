@@ -31,8 +31,13 @@
 
     <div class="border-b-4 border-double border-[#201e1f] pb-4 mb-6">
         <div class="flex items-center gap-4">
-            <div class="w-16 h-16 shrink-0 bg-[#201e1f] rounded-xl flex items-center justify-center">
-                <span class="text-white font-black text-xl">LPK</span>
+            <div class="w-20 h-20 shrink-0">
+                <!-- SVG Logo Pengganti (Lebih Profesional) -->
+                <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="20" fill="#201e1f"/>
+                    <path d="M30 70V30L45 50L60 30V70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M70 30L70 70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round"/>
+                </svg>
             </div>
             <div>
                 <h1 class="text-2xl font-black tracking-widest uppercase text-[#201e1f]">LPK <span class="text-[#de5e2e]">BINA MANDIRI</span></h1>
@@ -53,8 +58,8 @@
     </div>
 
     @php
-        // Tarik parameter dinamis dari program pelatihan
-        $parameters = $kelas?->programPelatihan?->parameter_penilaian ?? [];
+        // Tarik parameter dinamis dari fase-fase di kelas ini
+        $fases = $kelas->fase ?? collect();
     @endphp
 
     <table class="w-full border-collapse border border-gray-800 text-left text-xs mb-8">
@@ -65,53 +70,71 @@
                 <th class="border border-gray-800 py-2 px-2 text-center">NIK</th>
                 <th class="border border-gray-800 py-2 px-2 text-center">Hadir</th>
                 
-                @if(empty($parameters))
-                    <th class="border border-gray-800 py-2 px-2 text-center text-red-500">Kriteria Belum Diatur</th>
+                @if($fases->isEmpty())
+                    <th class="border border-gray-800 py-2 px-2 text-center text-red-500">Fase Belum Dibuat</th>
                 @else
-                    @foreach($parameters as $param)
-                        <th class="border border-gray-800 py-2 px-2 text-center">{{ $param }}</th>
+                    @foreach($fases as $fase)
+                        <th class="border border-gray-800 py-2 px-2 text-center">Fase: {{ $fase->nama_fase }}</th>
                     @endforeach
                 @endif
                 
-                <th class="border border-gray-800 py-2 px-2 text-center font-bold">Rata-rata</th>
+                <th class="border border-gray-800 py-2 px-2 text-center font-bold">Rata-rata Akhir</th>
                 <th class="border border-gray-800 py-2 px-2 text-center">Status</th>
             </tr>
         </thead>
         <tbody>
             @forelse($pesertaKelas as $key => $item)
+            @php
+                // Hitung ulang nilai (karena di view cetak controller belum melakukan perhitungan rapor akhir)
+                $totalNilai = 0;
+                $faseDinilai = 0;
+                $detailFase = [];
+                
+                foreach ($fases as $f) {
+                    $nf = \App\Models\NilaiFase::where('fase_kelas_id', $f->id)->where('pendaftaran_id', $item->id)->first();
+                    if ($nf) {
+                        $totalNilai += $nf->nilai_rata_rata;
+                        $faseDinilai++;
+                        $detailFase[$f->id] = $nf->nilai_rata_rata;
+                    } else {
+                        $detailFase[$f->id] = 0;
+                    }
+                }
+                
+                // Prioritaskan nilai_rata_rata yang sudah dikunci, jika belum, hitung on the fly
+                $rataRata = $item->status_kelulusan != 'menunggu' && $item->status_kelulusan != 'belum_dinilai' 
+                            ? $item->nilai_rata_rata 
+                            : ($faseDinilai > 0 ? round($totalNilai / $faseDinilai, 2) : 0);
+                            
+                $statusKelulusan = $rataRata >= 70 ? 'lulus' : 'tidak_lulus';
+            @endphp
             <tr>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $key + 1 }}</td>
                 <td class="border border-gray-800 py-2 px-2 font-bold">{{ $item->peserta?->user?->name ?? 'Peserta Terhapus' }}</td>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->peserta?->nik ?? '-' }}</td>
                 <td class="border border-gray-800 py-2 px-2 text-center">{{ $item->kehadiran ?? 0 }}%</td>
                 
-                @if(empty($parameters))
+                @if($fases->isEmpty())
                     <td class="border border-gray-800 py-2 px-2 text-center">-</td>
                 @else
-                    @foreach($parameters as $param)
-                        @php
-                            $oldData = $item->detail_nilai[$param] ?? null;
-                            $skor = is_array($oldData) ? ($oldData['skor'] ?? '-') : (is_numeric($oldData) ? $oldData : '-');
-                        @endphp
-                        <td class="border border-gray-800 py-2 px-2 text-center">{{ $skor }}</td>
+                    @foreach($fases as $fase)
+                        <td class="border border-gray-800 py-2 px-2 text-center">{{ $detailFase[$fase->id] > 0 ? $detailFase[$fase->id] : '-' }}</td>
                     @endforeach
                 @endif
                 
-                <td class="border border-gray-800 py-2 px-2 text-center font-black">{{ $item->nilai_rata_rata ?? 0 }}</td>
+                <td class="border border-gray-800 py-2 px-2 text-center font-black">{{ $rataRata }}</td>
                 
                 <td class="border border-gray-800 py-2 px-2 text-center font-bold uppercase">
-                    @if($item->status_kelulusan == 'lulus')
+                    @if($statusKelulusan == 'lulus')
                         <span class="text-green-700">Lulus</span>
-                    @elseif($item->status_kelulusan == 'tidak_lulus')
-                        <span class="text-red-700">Gagal</span>
                     @else
-                        <span>Pending</span>
+                        <span class="text-red-700">Gagal</span>
                     @endif
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="{{ count($parameters) + 6 }}" class="border border-gray-800 py-4 px-2 text-center italic">Tidak ada peserta di kelas ini.</td>
+                <td colspan="{{ count($fases) + 6 }}" class="border border-gray-800 py-4 px-2 text-center italic">Tidak ada peserta di kelas ini.</td>
             </tr>
             @endforelse
         </tbody>

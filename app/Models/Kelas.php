@@ -25,11 +25,7 @@ class Kelas extends Model
         return $this->belongsTo(Instruktur::class, 'instruktur_id');
     }
 
-    // Relasi: Kelas ini punya banyak materi
-    public function materi()
-    {
-        return $this->hasMany(Materi::class, 'kelas_id');
-    }
+
 
     // Relasi: Kelas ini punya banyak pertemuan
     public function pertemuan()

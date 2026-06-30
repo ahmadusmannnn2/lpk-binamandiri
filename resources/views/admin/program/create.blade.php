@@ -57,42 +57,7 @@
                             <x-input-error :messages="$errors->get('gambar')" class="mt-2" />
                         </div>
 
-                        <!-- BAGIAN PARAMETER PENILAIAN DENGAN PENJELASAN LENGKAP -->
-                        <div class="bg-orange-50 p-6 rounded-2xl border border-orange-200 shadow-sm relative overflow-hidden mt-8">
-                            <div class="absolute -right-4 -top-4 opacity-10">
-                                <svg class="w-32 h-32 text-oranye" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path></svg>
-                            </div>
-                            
-                            <div class="relative z-10">
-                                <x-input-label for="parameter_penilaian" :value="__('Setup Kriteria Penilaian Instruktur')" class="text-oranye font-black text-lg mb-2" />
-                                
-                                <p class="text-sm text-gray-700 mb-4 font-medium leading-relaxed">
-                                    Masukkan daftar kriteria kompetensi yang akan dinilai oleh instruktur pada akhir kelas. Setiap kriteria <strong class="text-hitam bg-orange-100 px-1 rounded">wajib dipisahkan dengan tanda koma ( , )</strong>. Parameter ini akan otomatis menjadi kolom tabel penilaian di akun Instruktur dan dicetak di bagian belakang sertifikat Peserta.
-                                </p>
-                                
-                                <x-text-input id="parameter_penilaian" class="block mt-2 w-full focus:border-oranye focus:ring-oranye rounded-xl border-orange-300 shadow-inner bg-white" type="text" name="parameter_penilaian" :value="old('parameter_penilaian')" placeholder="Ketik kriteria di sini..." required />
-                                <x-input-error :messages="$errors->get('parameter_penilaian')" class="mt-2" />
 
-                                <div class="mt-5 bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-orange-100">
-                                    <span class="font-bold text-hitam text-xs block mb-3 uppercase tracking-wider">💡 Contoh Pengisian (Copy-Paste jika sesuai):</span>
-                                    
-                                    <ul class="space-y-3">
-                                        <li class="text-sm">
-                                            <span class="block font-bold text-gray-800 text-xs mb-1">Pengelasan Dasar:</span>
-                                            <code class="text-oranye bg-orange-50 px-2 py-1 rounded border border-orange-100 select-all block break-words">1F, 2F, 3F, K3 Umum, Teori Dasar Las</code>
-                                        </li>
-                                        <li class="text-sm border-t border-orange-100 pt-3">
-                                            <span class="block font-bold text-gray-800 text-xs mb-1">Sertifikasi SMAW / FCAW Lanjut:</span>
-                                            <code class="text-oranye bg-orange-50 px-2 py-1 rounded border border-orange-100 select-all block break-words">1G, 2G, 3G, 4G, Visual Test (VT), Penetrant Test (PT)</code>
-                                        </li>
-                                        <li class="text-sm border-t border-orange-100 pt-3">
-                                            <span class="block font-bold text-gray-800 text-xs mb-1">Program Non-Teknik (Bahasa/Sikap):</span>
-                                            <code class="text-oranye bg-orange-50 px-2 py-1 rounded border border-orange-100 select-all block break-words">Ujian Tulis, Ujian Lisan, Kedisiplinan, Attitude Kerja</code>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
 
                         <div class="mt-6">
                             <x-input-label for="deskripsi" :value="__('Deskripsi Program / Silabus Singkat')" class="text-hitam font-bold text-sm" />

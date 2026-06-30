@@ -191,20 +191,25 @@
             </thead>
             <tbody class="bg-white/50 text-gray-900">
                 @php
-                    $parameters = $pendaftaran->kelas->programPelatihan->parameter_penilaian ?? [];
+                    $fases = $pendaftaran->kelas->fase ?? collect();
                     $no = 1;
                 @endphp
-                @foreach($parameters as $param)
+                @forelse($fases as $fase)
                     @php
-                        $oldData = $pendaftaran->detail_nilai[$param] ?? null;
-                        $skor = is_array($oldData) ? ($oldData['skor'] ?? '-') : (is_numeric($oldData) ? $oldData : '-');
+                        // Ambil nilai dari relasi NilaiFase
+                        $nf = \App\Models\NilaiFase::where('fase_kelas_id', $fase->id)->where('pendaftaran_id', $pendaftaran->id)->first();
+                        $skor = $nf ? $nf->nilai_rata_rata : '-';
                     @endphp
                     <tr>
                         <td class="border border-[#5c4a30] p-3 text-center">{{ $no++ }}</td>
-                        <td class="border border-[#5c4a30] p-3 font-medium">{{ $param }}</td>
+                        <td class="border border-[#5c4a30] p-3 font-medium">Fase Kompetensi: {{ $fase->nama_fase }}</td>
                         <td class="border border-[#5c4a30] p-3 text-center font-bold text-black">{{ $skor }}</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="3" class="border border-[#5c4a30] p-3 text-center italic text-gray-500">Belum ada data fase.</td>
+                    </tr>
+                @endforelse
             </tbody>
             <tfoot class="bg-[#f5ebd7] text-[#5c4a30]">
                 <tr>

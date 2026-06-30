@@ -69,11 +69,7 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-3 gap-2 mt-5">
-                                    <a href="{{ route('instruktur.materi.index', $kelas->id) }}" title="Upload Materi" class="bg-gray-100 hover:bg-hitam hover:text-white text-gray-700 text-center py-2 rounded-lg text-[10px] font-bold transition shadow-sm flex flex-col items-center justify-center gap-1 border border-gray-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                                        Materi
-                                    </a>
+                                <div class="grid grid-cols-2 gap-2 mt-5">
                                     <a href="{{ route('instruktur.jadwal.show', $kelas->id) }}#absensi" title="Isi Kehadiran" class="bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white text-center py-2 rounded-lg text-[10px] font-bold transition shadow-sm flex flex-col items-center justify-center gap-1 border border-blue-200">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         Absensi

@@ -143,13 +143,14 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
     Route::get('/jadwal', [\App\Http\Controllers\Instruktur\JadwalController::class, 'index'])->name('jadwal.index');
     Route::get('/jadwal/{id}', [\App\Http\Controllers\Instruktur\JadwalController::class, 'show'])->name('jadwal.show');
     Route::put('/fase/{id}/nilai', [\App\Http\Controllers\Instruktur\FaseKelasController::class, 'simpanNilai'])->name('fase.simpan_nilai');
+    Route::get('/jadwal/{id}/rapor', [\App\Http\Controllers\Instruktur\JadwalController::class, 'rapor'])->name('jadwal.rapor');
+    Route::post('/jadwal/{id}/kunci-rapor', [\App\Http\Controllers\Instruktur\JadwalController::class, 'kunciRapor'])->name('jadwal.kunci_rapor');
     Route::get('/jadwal/{id}/cetak', [\App\Http\Controllers\Instruktur\JadwalController::class, 'cetak'])->name('jadwal.cetak');  
 
-    Route::get('/kelas/{kelas_id}/materi', [\App\Http\Controllers\Instruktur\MateriController::class, 'index'])->name('materi.index');
-    Route::post('/kelas/{kelas_id}/materi', [\App\Http\Controllers\Instruktur\MateriController::class, 'store'])->name('materi.store');
-    Route::delete('/materi/{id}', [\App\Http\Controllers\Instruktur\MateriController::class, 'destroy'])->name('materi.destroy');
-
     Route::post('/kelas/{kelas_id}/fase', [\App\Http\Controllers\Instruktur\FaseKelasController::class, 'store'])->name('fase.store');
+    Route::put('/fase/{id}', [\App\Http\Controllers\Instruktur\FaseKelasController::class, 'update'])->name('fase.update');
+    Route::delete('/fase/{id}', [\App\Http\Controllers\Instruktur\FaseKelasController::class, 'destroy'])->name('fase.destroy');
+    Route::post('/kelas/{kelas_id}/fase/reorder', [\App\Http\Controllers\Instruktur\FaseKelasController::class, 'reorder'])->name('fase.reorder');
     Route::put('/fase/{id}/status', [\App\Http\Controllers\Instruktur\FaseKelasController::class, 'updateStatus'])->name('fase.update_status');
     Route::put('/fase/{id}/kriteria', [\App\Http\Controllers\Instruktur\FaseKelasController::class, 'updateKriteria'])->name('fase.update_kriteria');
 

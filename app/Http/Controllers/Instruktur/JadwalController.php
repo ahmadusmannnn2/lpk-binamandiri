@@ -30,68 +30,68 @@ class JadwalController extends Controller
         return view('instruktur.jadwal.show', compact('kelas', 'pesertaKelas'));
     }
 
-    public function simpanNilai(Request $request, $id)
+    public function rapor($id)
     {
-        $request->validate([
-            'nilai.*.detail' => 'nullable|array',
-            'nilai.*.detail.*.skor' => 'nullable|numeric|min:0|max:100',
-            'nilai.*.detail.*.catatan' => 'nullable|string|max:255',
-            'nilai.*.catatan_akhir' => 'nullable|string|max:500',
-        ]);
+        $instruktur = Auth::user()->instruktur;
+        $kelas = Kelas::with(['programPelatihan', 'fase.nilaiFase'])
+            ->where('id', $id)->where('instruktur_id', $instruktur->id)->firstOrFail();
 
-        if($request->has('nilai')) {
-            foreach ($request->nilai as $pendaftaran_id => $data) {
-                
-                // AMBIL DATA PENDAFTARAN LAMA (Agar no sertifikat dari Admin tidak hilang tertimpa!)
-                $pendaftaran_lama = Pendaftaran::find($pendaftaran_id);
-                $detailNilai_lama = $pendaftaran_lama->detail_nilai ?? [];
-                
-                $detailNilai_baru = $data['detail'] ?? [];
-                
-                // Kalkulasi Total dan Rata-rata Otomatis dari 'skor' baru
-                $nilai_total = 0;
-                $jumlah_kriteria = count($detailNilai_baru);
-                $skor_diinput = 0;
-                
-                foreach($detailNilai_baru as $kriteria => $info) {
-                    if (isset($info['skor']) && $info['skor'] !== '') {
-                        $nilai_total += (int) $info['skor'];
-                        $skor_diinput++;
-                    }
-                }
-                
-                $nilai_rata_rata = $skor_diinput > 0 ? round(($nilai_total / $skor_diinput), 2) : 0;
+        $pesertaKelas = Pendaftaran::with(['peserta.user'])->where('kelas_id', $id)->where('status_pendaftaran', 'disetujui')->get();
 
-                // Masukkan catatan akhir instruktur ke array baru
-                $detailNilai_baru['catatan_instruktur_final'] = $data['catatan_akhir'] ?? null;
-                
-                // KEMBALIKAN DATA ADMIN (Nomor & Tanggal Sertifikat) ke array baru
-                if(isset($detailNilai_lama['nomor_sertifikat'])) {
-                    $detailNilai_baru['nomor_sertifikat'] = $detailNilai_lama['nomor_sertifikat'];
-                }
-                if(isset($detailNilai_lama['tanggal_terbit'])) {
-                    $detailNilai_baru['tanggal_terbit'] = $detailNilai_lama['tanggal_terbit'];
-                }
-
-                // KEPUTUSAN OTOMATIS: Lulus jika Rata-rata >= 70
-                if ($skor_diinput == 0) {
-                    $status_kelulusan = 'belum_dinilai';
-                } elseif ($nilai_rata_rata >= 70) {
-                    $status_kelulusan = 'lulus';
+        // Hitung nilai akhir peserta berdasarkan semua fase yang ada
+        foreach ($pesertaKelas as $peserta) {
+            $totalNilai = 0;
+            $faseDinilai = 0;
+            
+            $detailFase = [];
+            foreach ($kelas->fase as $fase) {
+                // Cari NilaiFase untuk peserta ini di fase ini
+                $nilaiFase = $fase->nilaiFase->where('pendaftaran_id', $peserta->id)->first();
+                if ($nilaiFase) {
+                    $totalNilai += $nilaiFase->nilai_rata_rata;
+                    $faseDinilai++;
+                    $detailFase[$fase->id] = $nilaiFase->nilai_rata_rata;
                 } else {
-                    $status_kelulusan = 'tidak_lulus';
+                    $detailFase[$fase->id] = 0;
                 }
-
-                Pendaftaran::where('id', $pendaftaran_id)->update([
-                    'detail_nilai' => $detailNilai_baru,
-                    'nilai_total' => $nilai_total,
-                    'nilai_rata_rata' => $nilai_rata_rata,
-                    'status_kelulusan' => $status_kelulusan,
-                ]);
             }
+
+            $peserta->rata_rata_akhir = $faseDinilai > 0 ? round($totalNilai / $faseDinilai, 2) : 0;
+            $peserta->status_sementara = $peserta->rata_rata_akhir >= 70 ? 'Lulus' : 'Belum Lulus';
+            $peserta->detail_fase = $detailFase;
         }
 
-        return redirect()->route('instruktur.jadwal.show', $id)->with('success', 'Nilai dan Kelulusan berhasil dihitung & disimpan secara otomatis!');
+        return view('instruktur.jadwal.rapor', compact('kelas', 'pesertaKelas'));
+    }
+
+    public function kunciRapor(Request $request, $id)
+    {
+        $instruktur = Auth::user()->instruktur;
+        $kelas = Kelas::where('id', $id)->where('instruktur_id', $instruktur->id)->firstOrFail();
+        
+        $pesertaKelas = Pendaftaran::where('kelas_id', $id)->where('status_pendaftaran', 'disetujui')->get();
+
+        foreach ($pesertaKelas as $peserta) {
+            $totalNilai = 0;
+            $faseDinilai = 0;
+            
+            // Hitung manual dari DB agar akurat saat dikunci
+            $nilaiFasePeserta = \App\Models\NilaiFase::where('pendaftaran_id', $peserta->id)->get();
+            foreach ($nilaiFasePeserta as $nf) {
+                $totalNilai += $nf->nilai_rata_rata;
+                $faseDinilai++;
+            }
+            
+            $rataRataAkhir = $faseDinilai > 0 ? round($totalNilai / $faseDinilai, 2) : 0;
+            $statusKelulusan = $rataRataAkhir >= 70 ? 'lulus' : 'tidak_lulus';
+
+            $peserta->update([
+                'nilai_rata_rata' => $rataRataAkhir,
+                'status_kelulusan' => $statusKelulusan
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Rapor seluruh peserta di kelas ini berhasil dikunci dan direkap permanen!');
     }
 
     public function cetak($id)
