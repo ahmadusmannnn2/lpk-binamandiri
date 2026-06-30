@@ -31,8 +31,28 @@
                 </div>
             </div>
 
-            @if($kelasAktif)
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+            @if($kelasAktif && $kelasAktif->count() > 0)
+                <div x-data="{ activeKelas: 0 }">
+                    @if($kelasAktif->count() > 1)
+                    <!-- TAB UNTUK MEMILIH KELAS -->
+                    <div class="flex gap-4 mb-6 overflow-x-auto pb-2 scrollbar-hide border-b border-gray-200 mt-6">
+                        @foreach($kelasAktif as $idx => $pendaftaran)
+                        <button @click="activeKelas = {{ $idx }}" 
+                                :class="activeKelas === {{ $idx }} ? 'border-b-4 border-oranye text-oranye font-black' : 'border-b-4 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-bold'"
+                                class="px-2 py-3 text-sm transition-all whitespace-nowrap">
+                            {{ $pendaftaran->kelas->nama_kelas ?? 'Tanpa Nama' }} 
+                            <span class="text-[10px] ml-1 bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{{ $pendaftaran->kelas->programPelatihan->nama_program ?? 'Program' }}</span>
+                        </button>
+                        @endforeach
+                    </div>
+                    @endif
+
+                    @php $koleksiKelas = $kelasAktif; @endphp
+                    @foreach($koleksiKelas as $idx => $kAktif)
+                    @php $kelasAktif = $kAktif; @endphp
+                    
+                    <div x-show="activeKelas === {{ $idx }}" {!! $idx === 0 ? '' : 'style="display: none;"' !!} class="animate-fade-in-up w-full">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 {{ $koleksiKelas->count() > 1 ? 'mt-2' : 'mt-6' }}">
                     
                     <!-- SIDEBAR KIRI: INFORMASI KELAS & RAPOR PER FASE -->
                     <div class="lg:col-span-1 space-y-6">
@@ -285,6 +305,9 @@
                             </div>
                         @endif
                     </div>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
             @else
                 <div class="bg-white p-12 rounded-3xl shadow-lg text-center border border-gray-100 mt-8 relative overflow-hidden group">

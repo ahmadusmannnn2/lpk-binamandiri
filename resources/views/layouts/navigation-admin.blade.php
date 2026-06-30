@@ -69,9 +69,9 @@
                             $unreadAdmin = \App\Models\Pesan::where('penerima_id', Auth::id())->whereNull('dibaca_pada')->count();
                         @endphp
                         @if($unreadAdmin > 0)
-                            <span class="absolute top-0 right-0 flex h-3 w-3">
+                            <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-600 border border-hitam"></span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-white text-[9px] font-bold items-center justify-center border border-hitam">{{ $unreadAdmin > 9 ? '9+' : $unreadAdmin }}</span>
                             </span>
                         @endif
                     </a>

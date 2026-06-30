@@ -145,8 +145,8 @@
                 chatBody.scrollTop = chatBody.scrollHeight;
             }
 
-            function fetchMessages() {
-                fetch(`{{ url('chat/messages') }}/${userId}`)
+            function fetchMessages(markRead = true) {
+                fetch(`{{ url('chat/messages') }}/${userId}?mark_read=${markRead}`)
                     .then(response => {
                         if (!response.ok) throw new Error("Gagal mengambil pesan");
                         return response.json();

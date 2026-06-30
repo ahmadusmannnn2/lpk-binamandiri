@@ -38,16 +38,17 @@ class ChatController extends Controller
         }
     }
 
-    // Mengambil pesan via AJAX
-    public function getMessages($lawan_id)
+    public function getMessages(Request $request, $lawan_id)
     {
         $saya_id = Auth::id();
 
-        // Tandai pesan sudah dibaca
-        Pesan::where('pengirim_id', $lawan_id)
-            ->where('penerima_id', $saya_id)
-            ->whereNull('dibaca_pada')
-            ->update(['dibaca_pada' => now()]);
+        // Tandai pesan sudah dibaca (Hanya jika parameter mark_read=true)
+        if ($request->query('mark_read') === 'true') {
+            Pesan::where('pengirim_id', $lawan_id)
+                ->where('penerima_id', $saya_id)
+                ->whereNull('dibaca_pada')
+                ->update(['dibaca_pada' => now()]);
+        }
 
         $pesan = Pesan::with(['kelas.programPelatihan'])
             ->where(function ($q) use ($saya_id, $lawan_id) {

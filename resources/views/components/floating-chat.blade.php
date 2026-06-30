@@ -5,7 +5,7 @@
 @endphp
 
 @if($admin)
-<div x-data="{ chatOpen: false }" class="fixed bottom-6 right-6 z-[99]">
+<div x-data="{ chatOpen: false, unreadCount: {{ $unread }} }" class="fixed bottom-6 right-6 z-[99]">
     
     <!-- Kotak Obrolan (Tampil Saat chatOpen = true) -->
     <div x-show="chatOpen" 
@@ -57,17 +57,15 @@
     </div>
 
     <!-- Tombol Floating (Buka/Tutup) -->
-    <button @click="chatOpen = !chatOpen" class="w-14 h-14 bg-oranye hover:bg-[#c24b22] text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 border-2 border-white/50 absolute bottom-0 right-0">
+    <button @click="chatOpen = !chatOpen; if(chatOpen) { fetchMessages(true); unreadCount = 0; }" class="w-14 h-14 bg-oranye hover:bg-[#c24b22] text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 border-2 border-white/50 absolute bottom-0 right-0">
         <svg x-show="!chatOpen" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
         <svg x-show="chatOpen" style="display: none;" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         
-        <!-- Notifikasi Badge Merah -->
-        @if($unread > 0)
-        <span x-show="!chatOpen" class="absolute -top-1 -right-1 flex h-4 w-4">
+        <!-- Notifikasi Badge Merah Dinamis Alpine -->
+        <span x-show="!chatOpen && unreadCount > 0" style="display: none;" class="absolute -top-1 -right-1 flex h-4 w-4">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 border border-white text-[9px] font-black items-center justify-center text-white">{{ $unread > 9 ? '9+' : $unread }}</span>
+            <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 border border-white text-[9px] font-black items-center justify-center text-white" x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
         </span>
-        @endif
     </button>
 </div>
 
@@ -133,13 +131,24 @@
             chatBody.scrollTop = chatBody.scrollHeight;
         }
 
-        function fetchMessages() {
-            fetch(`{{ url('chat/messages') }}/${adminId}`)
+        window.fetchMessages = function(markRead = false) {
+            // Cek status chatOpen langsung dari Alpine instance element
+            const isChatOpen = document.querySelector('[x-data]').__x.$data.chatOpen;
+            const shouldMarkRead = markRead || isChatOpen;
+            
+            fetch(`{{ url('chat/messages') }}/${adminId}?mark_read=${shouldMarkRead}`)
                 .then(response => {
                     if (!response.ok) throw new Error("Gagal");
                     return response.json();
                 })
-                .then(data => renderMessages(data))
+                .then(data => {
+                    // Update Unread Count dynamically
+                    if (!isChatOpen) {
+                        const unread = data.filter(m => !m.is_saya && !m.dibaca).length;
+                        document.querySelector('[x-data]').__x.$data.unreadCount = unread;
+                    }
+                    renderMessages(data);
+                })
                 .catch(err => console.error("Error:", err));
         }
 
@@ -167,7 +176,7 @@
             .then(response => response.json())
             .then(data => {
                 pesanInput.value = '';
-                fetchMessages();
+                fetchMessages(true);
             })
             .finally(() => {
                 btnSend.disabled = false;
@@ -176,8 +185,8 @@
             });
         });
 
-        fetchMessages();
-        setInterval(fetchMessages, 3000);
+        fetchMessages(false);
+        setInterval(() => fetchMessages(false), 3000);
     });
 </script>
 @endpush

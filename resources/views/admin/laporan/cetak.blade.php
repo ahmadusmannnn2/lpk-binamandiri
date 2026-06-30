@@ -30,23 +30,26 @@
     @php
         $nama1 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_1')->value('nilai') ?? 'LPK';
         $nama2 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_2')->value('nilai') ?? 'BINA MANDIRI';
-        $alamat = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? 'Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah';
-        $telepon = \App\Models\Pengaturan::where('kunci', 'kontak_telepon')->value('nilai') ?? '-';
-        $email   = \App\Models\Pengaturan::where('kunci', 'kontak_email')->value('nilai') ?? '-';
+        $alamat_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? 'Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah';
+        $telepon_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_telepon')->value('nilai') ?? '-';
+        $email_cetak   = \App\Models\Pengaturan::where('kunci', 'kontak_email')->value('nilai') ?? '-';
     @endphp
 
-    <div style="border-bottom: 4px double #201e1f; padding-bottom: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px;">
-        <div style="width: 64px; height: 64px; background: #201e1f; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <span style="color: white; font-weight: 900; font-size: 14px; letter-spacing: 1px;">LPK</span>
-        </div>
-        <div>
-            <h1 style="font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; color: #201e1f; margin: 0;">
-                {{ $nama1 }} <span style="color: #de5e2e;">{{ $nama2 }}</span>
-            </h1>
-            <p style="font-size: 12px; font-weight: bold; color: #374151; margin: 2px 0;">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOMPETENSI PENGELASAN</p>
-            <p style="font-size: 11px; color: #6b7280; margin: 0;">
-                📍 {{ $alamat }} &nbsp;|&nbsp; 📞 {{ $telepon }} &nbsp;|&nbsp; ✉ {{ $email }}
-            </p>
+    <div class="border-b-4 border-double border-[#201e1f] pb-4 mb-6">
+        <div class="flex items-center gap-4">
+            <div class="w-20 h-20 shrink-0">
+                <!-- SVG Logo Pengganti (Lebih Profesional) -->
+                <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="20" fill="#201e1f"/>
+                    <path d="M30 70V30L45 50L60 30V70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M70 30L70 70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black tracking-widest uppercase text-[#201e1f]">{{ $nama1 }} <span class="text-[#de5e2e]">{{ $nama2 }}</span></h1>
+                <p class="font-bold text-gray-700 text-sm">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOMPETENSI PENGELASAN</p>
+                <p class="text-xs text-gray-500 mt-0.5">📍 {{ $alamat_cetak }} &nbsp;|&nbsp; 📞 {{ $telepon_cetak }} &nbsp;|&nbsp; ✉ {{ $email_cetak }}</p>
+            </div>
         </div>
     </div>
 

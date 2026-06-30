@@ -24,6 +24,8 @@
     </div>
 
     @php
+        $nama1 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_1')->value('nilai') ?? 'LPK';
+        $nama2 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_2')->value('nilai') ?? 'BINA MANDIRI';
         $alamat_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? 'Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah';
         $telepon_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_telepon')->value('nilai') ?? '-';
         $email_cetak   = \App\Models\Pengaturan::where('kunci', 'kontak_email')->value('nilai') ?? '-';
@@ -40,7 +42,7 @@
                 </svg>
             </div>
             <div>
-                <h1 class="text-2xl font-black tracking-widest uppercase text-[#201e1f]">LPK <span class="text-[#de5e2e]">BINA MANDIRI</span></h1>
+                <h1 class="text-2xl font-black tracking-widest uppercase text-[#201e1f]">{{ $nama1 }} <span class="text-[#de5e2e]">{{ $nama2 }}</span></h1>
                 <p class="font-bold text-gray-700 text-sm">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOMPETENSI PENGELASAN</p>
                 <p class="text-xs text-gray-500 mt-0.5">📍 {{ $alamat_cetak }} &nbsp;|&nbsp; 📞 {{ $telepon_cetak }} &nbsp;|&nbsp; ✉ {{ $email_cetak }}</p>
             </div>

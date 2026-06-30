@@ -33,16 +33,23 @@
         <div class="flex justify-between items-start border-b-4 border-[#de5e2e] pb-6 mb-8 relative z-10">
             <div class="flex items-center gap-4">
                 @php
-                    $logo = \App\Models\Pengaturan::where('kunci', 'logo_navbar')->value('nilai');
                     $nama1 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_1')->value('nilai') ?? 'LPK';
-                    $nama2 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_2')->value('nilai') ?? 'BINA';
+                    $nama2 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_2')->value('nilai') ?? 'BINA MANDIRI';
+                    $alamat_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? 'Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah';
+                    $telepon_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_telepon')->value('nilai') ?? '-';
+                    $email_cetak   = \App\Models\Pengaturan::where('kunci', 'kontak_email')->value('nilai') ?? '-';
                 @endphp
-                @if($logo)
-                    <img src="{{ asset('storage/' . $logo) }}" class="h-16 w-auto" alt="Logo LPK">
-                @endif
+                <div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0">
+                    <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100" height="100" rx="20" fill="#201e1f"/>
+                        <path d="M30 70V30L45 50L60 30V70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M70 30L70 70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round"/>
+                    </svg>
+                </div>
                 <div>
-                    <h1 class="text-3xl font-black tracking-widest text-[#1a1a1a]">{{ $nama1 }}<span class="text-[#de5e2e]">{{ $nama2 }}</span></h1>
-                    <p class="text-sm text-gray-500 font-medium">Lembaga Pelatihan Kerja Resmi & Profesional</p>
+                    <h1 class="text-2xl font-black tracking-widest uppercase text-[#201e1f]">{{ $nama1 }} <span class="text-[#de5e2e]">{{ $nama2 }}</span></h1>
+                    <p class="font-bold text-gray-700 text-[10px] sm:text-xs">LEMBAGA PELATIHAN KERJA DAN SERTIFIKASI KOMPETENSI</p>
+                    <p class="text-[9px] sm:text-[10px] text-gray-500 mt-0.5">📍 {{ $alamat_cetak }} &nbsp;|&nbsp; 📞 {{ $telepon_cetak }} &nbsp;|&nbsp; ✉ {{ $email_cetak }}</p>
                 </div>
             </div>
             <div class="text-right">

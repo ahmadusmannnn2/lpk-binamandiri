@@ -180,7 +180,9 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
                 ->where('status_pendaftaran', 'disetujui')
                 ->whereHas('kelas', function ($q) {
                     $q->where('tanggal_selesai', '>=', now()->toDateString());
-                })->first();
+                })
+                ->latest()
+                ->get();
         }
         return view('peserta.dashboard', compact('peserta', 'kelasAktif'));
     })->name('dashboard');
