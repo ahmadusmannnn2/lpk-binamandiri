@@ -78,8 +78,8 @@
                                         // Cari nilai fase peserta ini
                                         $nilaiFase = $kelasAktif->nilaiFase->where('fase_kelas_id', $fase->id)->first();
                                         
-                                        // Hitung Progress Kehadiran
-                                        $totalPertemuan = $fase->target_pertemuan > 0 ? $fase->target_pertemuan : max(1, $fase->pertemuan->count());
+                                        // Hitung Kehadiran berdasarkan jumlah jadwal pertemuan aktual (bukan target_pertemuan)
+                                        $totalPertemuan = max(1, $fase->pertemuan->count());
                                         $totalHadir = \App\Models\Absensi::where('pendaftaran_id', $kelasAktif->id)
                                                         ->whereHas('pertemuan', function($q) use ($fase) {
                                                             $q->where('fase_kelas_id', $fase->id);
@@ -100,7 +100,7 @@
                                             
                                             <!-- PROGRESS BAR MINI -->
                                             <div class="flex justify-between text-[10px] font-bold mb-1">
-                                                <span class="text-blue-900">Progres Kehadiran</span>
+                                                <span class="text-blue-900">Kehadiran ({{ $totalHadir }}/{{ $fase->pertemuan->count() }})</span>
                                                 <span class="text-blue-900">{{ $persentaseHadir }}%</span>
                                             </div>
                                             <div class="w-full bg-blue-200 rounded-full h-1.5 mb-2">
