@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pendaftaran;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PembayaranController extends Controller
 {
@@ -34,88 +35,145 @@ class PembayaranController extends Controller
         \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
 
-        // 4. Buat Token Baru JIKA belum punya token sama sekali
-        if (!$pendaftaran->snap_token) {
-            
-            $harga = $pendaftaran->kelas->programPelatihan->harga_pelatihan ?? 500000; 
+        // 4. Buat Token & Order ID baru jika belum ada keduanya
+        //    PENTING: order_id harus disimpan ke DB agar callback bisa menemukannya
+        if (!$pendaftaran->snap_token || !$pendaftaran->midtrans_order_id) {
 
-            // Siapkan Parameter untuk Midtrans
+            $harga = $pendaftaran->kelas->programPelatihan->harga_pelatihan ?? 500000;
+
+            // Order ID unik dengan format yang mudah diparsing: LPK-{id}-{timestamp}
+            $orderId = 'LPK-' . $pendaftaran->id . '-' . time();
+
             $params = [
                 'transaction_details' => [
-                    'order_id' => 'LPK-' . $pendaftaran->id . '-' . time(), // Order ID harus unik
-                    'gross_amount' => $harga, 
+                    'order_id'     => $orderId,
+                    'gross_amount' => $harga,
                 ],
                 'customer_details' => [
                     'first_name' => Auth::user()->name,
-                    'email' => Auth::user()->email,
-                    'phone' => Auth::user()->peserta->nomor_telepon ?? '', // SUDAH DIPERBAIKI
-                ]
+                    'email'      => Auth::user()->email,
+                    'phone'      => $peserta->nomor_telepon ?? '',
+                ],
             ];
 
-            // Minta Snap Token ke Midtrans
-            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            try {
+                $snapToken = \Midtrans\Snap::getSnapToken($params);
 
-            // Simpan token ke database
-            $pendaftaran->update([
-                'snap_token' => $snapToken
-            ]);
+                // Simpan KEDUANYA: snap_token dan midtrans_order_id
+                $pendaftaran->update([
+                    'snap_token'        => $snapToken,
+                    'midtrans_order_id' => $orderId,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Midtrans getSnapToken error: ' . $e->getMessage());
+                return back()->with('error', 'Gagal terhubung ke sistem pembayaran. Silakan coba beberapa saat lagi.');
+            }
         }
 
         // 5. Kirim data ke halaman view Pop-Up Pembayaran
         return view('peserta.pembayaran.bayar', compact('pendaftaran'));
     }
 
-    // FUNGSI PENERIMA NOTIFIKASI DARI MIDTRANS (SI PENJAGA GUDANG)
+    /**
+     * WEBHOOK CALLBACK: Menerima notifikasi status transaksi dari Midtrans
+     */
     public function callback(Request $request)
     {
-        // 1. Ambil Server Key dari config
         $serverKey = config('midtrans.server_key');
 
-        // 2. Buat Signature Key untuk validasi keamanan
-        $hashed = hash("sha512", $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
+        // Validasi signature keamanan
+        $hashed = hash('sha512', $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
 
-        // 3. Jika validasi sukses, proses datanya!
-        if ($hashed == $request->signature_key) {
-            // Jika pembayaran LUNAS
-            if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
-                
-                // Pisahkan Order ID (Format: LPK-{id}-{time})
-                $order_id_parts = explode('-', $request->order_id);
-                $pendaftaran_id = $order_id_parts[1]; 
+        // Log semua callback masuk untuk debugging
+        Log::info('Midtrans Callback diterima', [
+            'order_id'           => $request->order_id,
+            'transaction_status' => $request->transaction_status,
+            'fraud_status'       => $request->fraud_status ?? '-',
+            'signature_valid'    => ($hashed == $request->signature_key),
+        ]);
 
-                // Cari datanya di database
-                $pendaftaran = Pendaftaran::find($pendaftaran_id);
-                
-                if ($pendaftaran) {
-                    // --- LOGIKA MENDETEKSI METODE PEMBAYARAN (QRIS/BNI/DLL) ---
-                    $metode = $request->payment_type;
-                    if ($metode == 'bank_transfer') {
-                        $bank = $request->va_numbers[0]['bank'] ?? '';
-                        $metode = 'Virtual Account ' . strtoupper($bank);
-                    } elseif ($metode == 'echannel') {
-                        $metode = 'Mandiri Bill';
-                    } elseif ($metode == 'qris') {
-                        $metode = 'QRIS';
-                    } elseif ($metode == 'gopay') {
-                        $metode = 'GoPay';
-                    } elseif ($metode == 'shopeepay') {
-                        $metode = 'ShopeePay';
-                    } else {
-                        $metode = ucwords(str_replace('_', ' ', $metode)); 
-                    }
+        // Tolak jika signature tidak cocok
+        if ($hashed != $request->signature_key) {
+            Log::warning('Midtrans Callback: Signature TIDAK VALID!', ['order_id' => $request->order_id]);
+            return response()->json(['message' => 'Invalid signature'], 403);
+        }
 
-                    // UPDATE SEMUA DATA LUNAS KE DATABASE
-                    $pendaftaran->update([
-                        'status_pembayaran' => 'sukses',
-                        'status_pendaftaran' => 'disetujui',
-                        'metode_pembayaran' => $metode,
-                        'waktu_pembayaran' => $request->settlement_time ?? now()
-                    ]);
-                }
+        // Cari pendaftaran berdasarkan midtrans_order_id yang tersimpan di DB
+        $pendaftaran = Pendaftaran::where('midtrans_order_id', $request->order_id)->first();
+
+        // Fallback: parsing order_id jika kolom midtrans_order_id belum ada datanya (data lama)
+        if (!$pendaftaran) {
+            $parts = explode('-', $request->order_id);
+            // Format: LPK-{id}-{timestamp}
+            if (count($parts) >= 3 && $parts[0] === 'LPK' && is_numeric($parts[1])) {
+                $pendaftaran = Pendaftaran::find((int) $parts[1]);
+                Log::info('Midtrans Callback: fallback lookup by pendaftaran_id=' . ($parts[1] ?? 'null'));
             }
         }
 
-        // 4. Beri jawaban "OK" ke Midtrans
-        return response()->json(['message' => 'Callback received']);
+        if (!$pendaftaran) {
+            Log::error('Midtrans Callback: Pendaftaran TIDAK DITEMUKAN', ['order_id' => $request->order_id]);
+            return response()->json(['message' => 'Pendaftaran not found'], 404);
+        }
+
+        // Proses status pembayaran
+        $transactionStatus = $request->transaction_status;
+        $fraudStatus       = $request->fraud_status ?? '';
+
+        if ($transactionStatus == 'capture') {
+            // Kartu kredit: hanya proses jika tidak fraud
+            if ($fraudStatus == 'accept') {
+                $this->markAsPaid($pendaftaran, $request);
+            }
+        } elseif ($transactionStatus == 'settlement') {
+            // Transfer/VA/QRIS: langsung lunas
+            $this->markAsPaid($pendaftaran, $request);
+        } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
+            $pendaftaran->update(['status_pembayaran' => 'gagal']);
+            Log::info('Midtrans Callback: Pembayaran GAGAL', [
+                'order_id' => $request->order_id,
+                'status'   => $transactionStatus,
+            ]);
+        } elseif ($transactionStatus == 'pending') {
+            $pendaftaran->update(['status_pembayaran' => 'pending']);
+        }
+
+        return response()->json(['message' => 'Callback processed successfully']);
+    }
+
+    /**
+     * Helper: tandai pendaftaran sebagai LUNAS dan DISETUJUI
+     */
+    private function markAsPaid(Pendaftaran $pendaftaran, Request $request): void
+    {
+        $metode = $request->payment_type ?? 'unknown';
+
+        if ($metode == 'bank_transfer') {
+            $bank   = $request->va_numbers[0]['bank'] ?? '';
+            $metode = 'Virtual Account ' . strtoupper($bank);
+        } elseif ($metode == 'echannel') {
+            $metode = 'Mandiri Bill';
+        } elseif ($metode == 'qris') {
+            $metode = 'QRIS';
+        } elseif ($metode == 'gopay') {
+            $metode = 'GoPay';
+        } elseif ($metode == 'shopeepay') {
+            $metode = 'ShopeePay';
+        } else {
+            $metode = ucwords(str_replace('_', ' ', $metode));
+        }
+
+        $pendaftaran->update([
+            'status_pembayaran'  => 'sukses',
+            'status_pendaftaran' => 'disetujui',
+            'metode_pembayaran'  => $metode,
+            'waktu_pembayaran'   => $request->settlement_time ?? now(),
+        ]);
+
+        Log::info('Midtrans Callback: Pembayaran SUKSES dicatat', [
+            'pendaftaran_id' => $pendaftaran->id,
+            'order_id'       => $request->order_id,
+            'metode'         => $metode,
+        ]);
     }
 }
