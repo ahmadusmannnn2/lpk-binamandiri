@@ -198,6 +198,7 @@ Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->gr
 
     // Rute Pembayaran Midtrans
     Route::get('/pembayaran/{id}', [\App\Http\Controllers\PembayaranController::class, 'bayar'])->name('pembayaran.bayar');
+    Route::post('/pembayaran/finish', [\App\Http\Controllers\PembayaranController::class, 'finish'])->name('pembayaran.finish');
 
     // --- FITUR RIWAYAT PENDAFTARAN & TAGIHAN PESERTA ---
     Route::get('/riwayat-pendaftaran', [\App\Http\Controllers\Peserta\PendaftaranController::class, 'riwayat'])->name('riwayat.index');

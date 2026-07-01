@@ -59,27 +59,45 @@
     </div>
 
     <!-- SCRIPT WAJIB DARI MIDTRANS -->
-    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
+    <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script type="text/javascript">
+        const pendaftaranId = {{ $pendaftaran->id }};
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')
+            ? document.querySelector('meta[name="csrf-token"]').content
+            : '{{ csrf_token() }}';
+
         document.getElementById('pay-button').onclick = function () {
-            // Memanggil pop-up Snap Midtrans menggunakan token dari Controller
             snap.pay('{{ $pendaftaran->snap_token }}', {
-                onSuccess: function(result){
-                    // Tindakan jika pembayaran berhasil
-                    alert("Pembayaran berhasil! Menunggu verifikasi otomatis dari sistem.");
-                    window.location.href = "{{ route('peserta.dashboard') }}";
+                onSuccess: function(result) {
+                    // Kirim ke server untuk verifikasi & update status DB
+                    fetch('{{ route("peserta.pembayaran.finish") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({ pendaftaran_id: pendaftaranId })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('Finish response:', data);
+                        window.location.href = "{{ route('peserta.riwayat.index') }}?bayar=sukses";
+                    })
+                    .catch(err => {
+                        console.error('Finish error:', err);
+                        // Tetap redirect meski ada error fetch
+                        window.location.href = "{{ route('peserta.riwayat.index') }}?bayar=sukses";
+                    });
                 },
-                onPending: function(result){
-                    // Tindakan jika menunggu pembayaran (contoh: di Indomaret / transfer manual)
-                    alert("Menunggu pembayaran Anda. Silakan selesaikan transaksi sesuai instruksi Midtrans.");
+                onPending: function(result) {
+                    alert("Silakan selesaikan pembayaran sesuai instruksi. Status akan diperbarui otomatis.");
+                    window.location.href = "{{ route('peserta.riwayat.index') }}";
                 },
-                onError: function(result){
-                    // Tindakan jika pembayaran gagal
-                    alert("Pembayaran gagal! Silakan coba lagi nanti.");
+                onError: function(result) {
+                    alert("Pembayaran gagal. Silakan coba lagi.");
                 },
-                onClose: function(){
-                    // Tindakan jika user menutup pop-up tanpa bayar
-                    alert('Anda menutup layar pembayaran sebelum menyelesaikannya.');
+                onClose: function() {
+                    // Tidak perlu alert, biarkan user bisa coba lagi
                 }
             });
         };

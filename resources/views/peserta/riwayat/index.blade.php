@@ -8,6 +8,19 @@
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
+            @if(request('bayar') === 'sukses')
+            <div id="bayar-sukses-alert" class="mb-6 bg-green-50 border border-green-200 rounded-2xl p-5 flex items-start gap-4 shadow-sm">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="font-black text-green-800 text-base">🎉 Pembayaran Berhasil!</p>
+                    <p class="text-sm text-green-700 mt-0.5">Pendaftaran Anda telah dikonfirmasi. Selamat bergabung dengan program pelatihan LPK Bina Mandiri!</p>
+                </div>
+                <button onclick="document.getElementById('bayar-sukses-alert').remove()" class="ml-auto text-green-400 hover:text-green-600 shrink-0">✕</button>
+            </div>
+            @endif
+
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-2xl border-t-4 border-oranye">
                 <div class="p-6 overflow-x-auto">
                     <table class="w-full text-left border-collapse">

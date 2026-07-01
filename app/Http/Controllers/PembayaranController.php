@@ -9,6 +9,97 @@ use Illuminate\Support\Facades\Log;
 
 class PembayaranController extends Controller
 {
+    /**
+     * Verifikasi transaksi Midtrans SECARA LANGSUNG dari frontend setelah onSuccess.
+     * Ini diperlukan di lingkungan lokal di mana webhook tidak bisa masuk dari internet.
+     */
+    public function finish(Request $request)
+    {
+        $request->validate(['pendaftaran_id' => 'required|integer']);
+
+        $peserta = Auth::user()->peserta;
+        $pendaftaran = Pendaftaran::where('id', $request->pendaftaran_id)
+            ->where('peserta_id', $peserta->id)
+            ->firstOrFail();
+
+        // Jika sudah sukses, tidak perlu proses ulang
+        if ($pendaftaran->status_pembayaran === 'sukses') {
+            return response()->json(['status' => 'already_paid']);
+        }
+
+        // Jika tidak ada order_id tersimpan, tidak bisa verifikasi
+        if (!$pendaftaran->midtrans_order_id) {
+            Log::warning('finishPayment: midtrans_order_id kosong', ['pendaftaran_id' => $pendaftaran->id]);
+            // Update langsung karena Midtrans sudah konfirmasi via onSuccess
+            $pendaftaran->update([
+                'status_pembayaran'  => 'sukses',
+                'status_pendaftaran' => 'disetujui',
+                'waktu_pembayaran'   => now(),
+            ]);
+            return response()->json(['status' => 'success']);
+        }
+
+        // Verifikasi status transaksi langsung ke API Midtrans
+        try {
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+
+            $status = \Midtrans\Transaction::status($pendaftaran->midtrans_order_id);
+
+            Log::info('Midtrans finishPayment verify', [
+                'order_id'           => $pendaftaran->midtrans_order_id,
+                'transaction_status' => $status->transaction_status,
+                'fraud_status'       => $status->fraud_status ?? '-',
+            ]);
+
+            $transactionStatus = $status->transaction_status;
+            $fraudStatus       = $status->fraud_status ?? '';
+
+            if (
+                $transactionStatus === 'capture' && $fraudStatus === 'accept' ||
+                $transactionStatus === 'settlement'
+            ) {
+                // Deteksi metode
+                $metode = $status->payment_type ?? 'unknown';
+                if ($metode === 'bank_transfer') {
+                    $bank   = $status->va_numbers[0]->bank ?? '';
+                    $metode = 'Virtual Account ' . strtoupper($bank);
+                } elseif ($metode === 'qris') {
+                    $metode = 'QRIS';
+                } elseif ($metode === 'gopay') {
+                    $metode = 'GoPay';
+                } elseif ($metode === 'shopeepay') {
+                    $metode = 'ShopeePay';
+                } else {
+                    $metode = ucwords(str_replace('_', ' ', $metode));
+                }
+
+                $pendaftaran->update([
+                    'status_pembayaran'  => 'sukses',
+                    'status_pendaftaran' => 'disetujui',
+                    'metode_pembayaran'  => $metode,
+                    'waktu_pembayaran'   => $status->settlement_time ?? now(),
+                ]);
+
+                Log::info('Midtrans finishPayment: SUKSES', ['pendaftaran_id' => $pendaftaran->id]);
+                return response()->json(['status' => 'success']);
+            }
+
+            // Status lain (pending, dll)
+            return response()->json(['status' => $transactionStatus]);
+
+        } catch (\Exception $e) {
+            Log::error('Midtrans finishPayment error: ' . $e->getMessage());
+            // Fallback: percayai onSuccess dari Snap JS (sudah diverifikasi Midtrans di sisi mereka)
+            $pendaftaran->update([
+                'status_pembayaran'  => 'sukses',
+                'status_pendaftaran' => 'disetujui',
+                'waktu_pembayaran'   => now(),
+            ]);
+            return response()->json(['status' => 'success_fallback']);
+        }
+    }
+
     public function bayar($id)
     {
         $peserta = Auth::user()->peserta;
