@@ -26,6 +26,13 @@ class PertemuanController extends Controller
             'file_materi' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip,rar|max:5120', // Maks 5MB
         ]);
 
+        // CEK BATAS TARGET PERTEMUAN
+        $fase = \App\Models\FaseKelas::findOrFail($request->fase_kelas_id);
+        $jumlahPertemuanSaatIni = \App\Models\Pertemuan::where('fase_kelas_id', $fase->id)->count();
+        if ($jumlahPertemuanSaatIni >= $fase->target_pertemuan) {
+            return back()->with('error', "Gagal! Anda tidak bisa menambah jadwal lagi. Target maksimal untuk fase {$fase->nama_fase} adalah {$fase->target_pertemuan} pertemuan.");
+        }
+
         $materiPath = null;
         if ($request->hasFile('file_materi')) {
             $materiPath = $request->file('file_materi')->store('materi_pertemuan', 'public');
