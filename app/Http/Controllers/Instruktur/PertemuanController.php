@@ -78,7 +78,7 @@ class PertemuanController extends Controller
     public function simpanAbsensi(Request $request, $id)
     {
         $request->validate([
-            'absensi.*.status' => 'required|in:hadir,alpa,izin,sakit',
+            'absensi.*.status' => 'required|in:hadir,alpa',
             'absensi.*.nilai'  => 'nullable|numeric|min:0|max:100',
             'absensi.*.catatan'=> 'nullable|string|max:500',
         ]);

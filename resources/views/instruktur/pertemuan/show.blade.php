@@ -68,16 +68,6 @@
                                                     <span class="text-xs font-bold">Hadir</span>
                                                 </label>
 
-                                                <label class="flex flex-col items-center gap-1 cursor-pointer p-2 rounded-lg border-2 transition-all duration-200 {{ $absen->status == 'izin' ? 'bg-blue-100 border-blue-500 text-blue-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-blue-300' }}">
-                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="izin" {{ $absen->status == 'izin' ? 'checked' : '' }} class="hidden" onchange="updateRadioUI(this, 'bg-blue-100', 'border-blue-500', 'text-blue-800')">
-                                                    <span class="text-xs font-bold">Izin</span>
-                                                </label>
-
-                                                <label class="flex flex-col items-center gap-1 cursor-pointer p-2 rounded-lg border-2 transition-all duration-200 {{ $absen->status == 'sakit' ? 'bg-yellow-100 border-yellow-500 text-yellow-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-yellow-300' }}">
-                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="sakit" {{ $absen->status == 'sakit' ? 'checked' : '' }} class="hidden" onchange="updateRadioUI(this, 'bg-yellow-100', 'border-yellow-500', 'text-yellow-800')">
-                                                    <span class="text-xs font-bold">Sakit</span>
-                                                </label>
-
                                                 <label class="flex flex-col items-center gap-1 cursor-pointer p-2 rounded-lg border-2 transition-all duration-200 {{ $absen->status == 'alpa' ? 'bg-red-100 border-red-500 text-red-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-red-300' }}">
                                                     <input type="radio" name="absensi[{{ $absen->id }}][status]" value="alpa" {{ $absen->status == 'alpa' ? 'checked' : '' }} class="hidden" onchange="updateRadioUI(this, 'bg-red-100', 'border-red-500', 'text-red-800')">
                                                     <span class="text-xs font-bold">Alpa</span>
