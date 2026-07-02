@@ -48,9 +48,8 @@
                             <table class="min-w-full w-full text-left border-collapse">
                                 <thead>
                                     <tr class="bg-gray-50 text-hitam uppercase text-xs font-black tracking-wider border-b-2 border-gray-200">
-                                        <th class="py-3 px-4 w-1/3">Nama Peserta</th>
-                                        <th class="py-3 px-4 text-center w-1/3">Status Kehadiran</th>
-                                        <th class="py-3 px-4 text-center w-1/3">Penilaian & Catatan</th>
+                                        <th class="py-3 px-4 w-1/2">Nama Peserta</th>
+                                        <th class="py-3 px-4 text-center w-1/2">Status Kehadiran</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-gray-600 text-sm">
@@ -74,25 +73,29 @@
                                                 </label>
                                             </div>
                                         </td>
-                                        
-                                        <td class="py-4 px-4">
-                                            <div class="flex flex-col gap-2">
-                                                <input type="number" name="absensi[{{ $absen->id }}][nilai]" value="{{ $absen->nilai }}" placeholder="Nilai (0-100)" min="0" max="100" class="w-full text-xs rounded-lg border-gray-300 focus:border-oranye focus:ring-oranye">
-                                                <input type="text" name="absensi[{{ $absen->id }}][catatan]" value="{{ $absen->catatan }}" placeholder="Catatan opsional..." class="w-full text-xs rounded-lg border-gray-300 focus:border-oranye focus:ring-oranye">
-                                            </div>
-                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
 
-                        <div class="mt-8 flex justify-end pt-6 border-t border-gray-200">
+                        <div class="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
+                            <!-- Tombol Hapus memicu form di bawahnya -->
+                            <button type="button" onclick="if(confirm('Yakin ingin menghapus seluruh jadwal absensi pertemuan ini? (Tindakan ini tidak bisa dibatalkan)')) document.getElementById('delete-jadwal-form').submit();" class="text-red-500 hover:text-red-700 font-bold px-4 py-2 border border-red-200 hover:bg-red-50 rounded-lg transition flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Hapus Absensi Ini
+                            </button>
+
                             <button type="submit" class="bg-hitam hover:bg-gray-800 text-white px-10 py-3 rounded-xl shadow-lg font-bold transition transform hover:-translate-y-1 flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 Simpan Kehadiran
                             </button>
                         </div>
+                    </form>
+
+                    <!-- Form Tersembunyi untuk Menghapus Jadwal -->
+                    <form id="delete-jadwal-form" action="{{ route('instruktur.pertemuan.destroy', $pertemuan->id) }}" method="POST" class="hidden">
+                        @csrf @method('DELETE')
                     </form>
                 </div>
             </div>

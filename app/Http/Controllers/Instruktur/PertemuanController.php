@@ -120,7 +120,7 @@ class PertemuanController extends Controller
         $pertemuan->delete(); // Otomatis cascade absensi
         $this->updatePersentaseKehadiran($kelas_id);
 
-        return back()->with('success', 'Pertemuan berhasil dihapus!');
+        return redirect()->route('instruktur.jadwal.show', $kelas_id)->with('success', 'Pertemuan/Jadwal berhasil dihapus secara permanen!');
     }
 
     private function updatePersentaseKehadiran($kelas_id)
