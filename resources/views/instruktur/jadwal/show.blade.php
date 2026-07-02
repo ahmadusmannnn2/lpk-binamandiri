@@ -13,6 +13,14 @@
                 </div>
             @endif
 
+            @if(session('error'))
+                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm flex items-center">
+                    <svg class="h-5 w-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p class="font-bold text-red-800">{{ session('error') }}</p>
+                </div>
+            @endif
+
+
             <!-- HEADER KELAS -->
             <div class="bg-hitam text-white rounded-xl p-8 flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-oranye shadow-xl relative overflow-hidden">
                 <div class="absolute -right-10 -top-10 opacity-10 pointer-events-none">
