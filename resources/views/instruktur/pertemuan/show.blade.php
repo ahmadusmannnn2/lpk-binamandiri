@@ -48,8 +48,9 @@
                             <table class="min-w-full w-full text-left border-collapse">
                                 <thead>
                                     <tr class="bg-gray-50 text-hitam uppercase text-xs font-black tracking-wider border-b-2 border-gray-200">
-                                        <th class="py-3 px-4 w-1/2">Nama Peserta</th>
-                                        <th class="py-3 px-4 text-center w-1/2">Status Kehadiran</th>
+                                        <th class="py-3 px-4 w-1/3">Nama Peserta</th>
+                                        <th class="py-3 px-4 text-center w-1/3">Status Kehadiran</th>
+                                        <th class="py-3 px-4 text-center w-1/3">Penilaian & Catatan</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-gray-600 text-sm">
@@ -61,24 +62,33 @@
                                         </td>
                                         
                                         <td class="py-4 px-4">
-                                            <div class="flex justify-center gap-3">
-                                                <label class="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border-2 transition-all duration-200
-                                                    {{ $absen->status == 'hadir' ? 'bg-green-100 border-green-500 text-green-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-green-300' }}">
-                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="hadir"
-                                                        {{ $absen->status == 'hadir' ? 'checked' : '' }}
-                                                        class="hidden" onchange="this.closest('td').querySelectorAll('label').forEach(l=>l.classList.remove('bg-green-100','border-green-500','text-green-800','bg-red-100','border-red-500','text-red-800'));this.closest('td').querySelectorAll('label').forEach(l=>l.classList.add('bg-gray-50','border-gray-200','text-gray-500'));this.closest('label').classList.remove('bg-gray-50','border-gray-200','text-gray-500');this.closest('label').classList.add('bg-green-100','border-green-500','text-green-800');">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                                    <span class="text-sm font-bold">Hadir</span>
+                                            <div class="flex justify-center gap-2">
+                                                <label class="flex flex-col items-center gap-1 cursor-pointer p-2 rounded-lg border-2 transition-all duration-200 {{ $absen->status == 'hadir' ? 'bg-green-100 border-green-500 text-green-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-green-300' }}">
+                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="hadir" {{ $absen->status == 'hadir' ? 'checked' : '' }} class="hidden" onchange="updateRadioUI(this, 'bg-green-100', 'border-green-500', 'text-green-800')">
+                                                    <span class="text-xs font-bold">Hadir</span>
                                                 </label>
 
-                                                <label class="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg border-2 transition-all duration-200
-                                                    {{ $absen->status == 'alpa' ? 'bg-red-100 border-red-500 text-red-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-red-300' }}">
-                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="alpa"
-                                                        {{ $absen->status == 'alpa' ? 'checked' : '' }}
-                                                        class="hidden" onchange="this.closest('td').querySelectorAll('label').forEach(l=>l.classList.remove('bg-green-100','border-green-500','text-green-800','bg-red-100','border-red-500','text-red-800'));this.closest('td').querySelectorAll('label').forEach(l=>l.classList.add('bg-gray-50','border-gray-200','text-gray-500'));this.closest('label').classList.remove('bg-gray-50','border-gray-200','text-gray-500');this.closest('label').classList.add('bg-red-100','border-red-500','text-red-800');">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                    <span class="text-sm font-bold">Alpa</span>
+                                                <label class="flex flex-col items-center gap-1 cursor-pointer p-2 rounded-lg border-2 transition-all duration-200 {{ $absen->status == 'izin' ? 'bg-blue-100 border-blue-500 text-blue-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-blue-300' }}">
+                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="izin" {{ $absen->status == 'izin' ? 'checked' : '' }} class="hidden" onchange="updateRadioUI(this, 'bg-blue-100', 'border-blue-500', 'text-blue-800')">
+                                                    <span class="text-xs font-bold">Izin</span>
                                                 </label>
+
+                                                <label class="flex flex-col items-center gap-1 cursor-pointer p-2 rounded-lg border-2 transition-all duration-200 {{ $absen->status == 'sakit' ? 'bg-yellow-100 border-yellow-500 text-yellow-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-yellow-300' }}">
+                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="sakit" {{ $absen->status == 'sakit' ? 'checked' : '' }} class="hidden" onchange="updateRadioUI(this, 'bg-yellow-100', 'border-yellow-500', 'text-yellow-800')">
+                                                    <span class="text-xs font-bold">Sakit</span>
+                                                </label>
+
+                                                <label class="flex flex-col items-center gap-1 cursor-pointer p-2 rounded-lg border-2 transition-all duration-200 {{ $absen->status == 'alpa' ? 'bg-red-100 border-red-500 text-red-800' : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-red-300' }}">
+                                                    <input type="radio" name="absensi[{{ $absen->id }}][status]" value="alpa" {{ $absen->status == 'alpa' ? 'checked' : '' }} class="hidden" onchange="updateRadioUI(this, 'bg-red-100', 'border-red-500', 'text-red-800')">
+                                                    <span class="text-xs font-bold">Alpa</span>
+                                                </label>
+                                            </div>
+                                        </td>
+                                        
+                                        <td class="py-4 px-4">
+                                            <div class="flex flex-col gap-2">
+                                                <input type="number" name="absensi[{{ $absen->id }}][nilai]" value="{{ $absen->nilai }}" placeholder="Nilai (0-100)" min="0" max="100" class="w-full text-xs rounded-lg border-gray-300 focus:border-oranye focus:ring-oranye">
+                                                <input type="text" name="absensi[{{ $absen->id }}][catatan]" value="{{ $absen->catatan }}" placeholder="Catatan opsional..." class="w-full text-xs rounded-lg border-gray-300 focus:border-oranye focus:ring-oranye">
                                             </div>
                                         </td>
                                     </tr>
@@ -99,4 +109,30 @@
 
         </div>
     </div>
+
+    <!-- Script for handling radio UI changes elegantly -->
+    <script>
+        function updateRadioUI(radio, bgClass, borderClass, textClass) {
+            // Reset all labels in this cell
+            let td = radio.closest('td');
+            let labels = td.querySelectorAll('label');
+            
+            labels.forEach(l => {
+                // Remove all possible active classes
+                l.classList.remove(
+                    'bg-green-100', 'border-green-500', 'text-green-800',
+                    'bg-blue-100', 'border-blue-500', 'text-blue-800',
+                    'bg-yellow-100', 'border-yellow-500', 'text-yellow-800',
+                    'bg-red-100', 'border-red-500', 'text-red-800'
+                );
+                // Add default inactive classes
+                l.classList.add('bg-gray-50', 'border-gray-200', 'text-gray-500');
+            });
+
+            // Activate the selected label
+            let activeLabel = radio.closest('label');
+            activeLabel.classList.remove('bg-gray-50', 'border-gray-200', 'text-gray-500');
+            activeLabel.classList.add(bgClass, borderClass, textClass);
+        }
+    </script>
 </x-app-layout>
