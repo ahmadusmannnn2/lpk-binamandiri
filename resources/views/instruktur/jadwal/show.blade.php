@@ -212,6 +212,12 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-2 w-full sm:w-auto">
+                                                    @if($pertemuan->file_materi)
+                                                        <a href="{{ asset('storage/' . $pertemuan->file_materi) }}" target="_blank" class="flex-1 sm:flex-none text-center bg-blue-600 text-white text-[11px] px-4 py-2 rounded-lg shadow hover:bg-blue-500 font-bold transition flex items-center justify-center gap-1" title="Lihat Materi">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                            Lihat Materi
+                                                        </a>
+                                                    @endif
                                                     <a href="{{ route('instruktur.pertemuan.show', $pertemuan->id) }}" class="flex-1 sm:flex-none text-center bg-hitam text-white text-[11px] px-4 py-2 rounded-lg shadow hover:bg-oranye font-bold transition">
                                                         Isi Presensi
                                                     </a>
