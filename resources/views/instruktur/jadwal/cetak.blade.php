@@ -29,17 +29,22 @@
         $alamat_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_alamat')->value('nilai') ?? 'Jl. Karya Tralis No. 58, Jlamprang, Wonosobo, Jawa Tengah';
         $telepon_cetak = \App\Models\Pengaturan::where('kunci', 'kontak_telepon')->value('nilai') ?? '-';
         $email_cetak   = \App\Models\Pengaturan::where('kunci', 'kontak_email')->value('nilai') ?? '-';
+        $logoApp = \App\Models\Pengaturan::where('kunci', 'logo_navbar')->value('nilai');
     @endphp
 
     <div class="border-b-4 border-double border-[#201e1f] pb-4 mb-6">
         <div class="flex items-center gap-4">
             <div class="w-20 h-20 shrink-0">
-                <!-- SVG Logo Pengganti (Lebih Profesional) -->
-                <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="100" height="100" rx="20" fill="#201e1f"/>
-                    <path d="M30 70V30L45 50L60 30V70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M70 30L70 70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round"/>
-                </svg>
+                @if($logoApp)
+                    <img src="{{ asset('storage/' . $logoApp) }}" class="w-full h-full object-contain" alt="Logo">
+                @else
+                    <!-- SVG Logo Pengganti (Lebih Profesional) -->
+                    <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100" height="100" rx="20" fill="#201e1f"/>
+                        <path d="M30 70V30L45 50L60 30V70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M70 30L70 70" stroke="#de5e2e" stroke-width="8" stroke-linecap="round"/>
+                    </svg>
+                @endif
             </div>
             <div>
                 <h1 class="text-2xl font-black tracking-widest uppercase text-[#201e1f]">{{ $nama1 }} <span class="text-[#de5e2e]">{{ $nama2 }}</span></h1>
