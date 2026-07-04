@@ -123,6 +123,46 @@ class PertemuanController extends Controller
         return redirect()->route('instruktur.jadwal.show', $kelas_id)->with('success', 'Pertemuan/Jadwal berhasil dihapus secara permanen!');
     }
 
+    // 5. Update Materi
+    public function updateMateri(Request $request, $id)
+    {
+        $pertemuan = Pertemuan::findOrFail($id);
+        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        $request->validate([
+            'file_materi' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,zip,rar|max:5120',
+        ]);
+
+        if ($request->hasFile('file_materi')) {
+            // Hapus file lama jika ada
+            if ($pertemuan->file_materi && Storage::disk('public')->exists($pertemuan->file_materi)) {
+                Storage::disk('public')->delete($pertemuan->file_materi);
+            }
+            $materiPath = $request->file('file_materi')->store('materi_pertemuan', 'public');
+            $pertemuan->update(['file_materi' => $materiPath]);
+        }
+
+        return back()->with('success', 'Materi berhasil diperbarui!');
+    }
+
+    // 6. Hapus Materi
+    public function destroyMateri($id)
+    {
+        $pertemuan = Pertemuan::findOrFail($id);
+        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        if ($pertemuan->file_materi && Storage::disk('public')->exists($pertemuan->file_materi)) {
+            Storage::disk('public')->delete($pertemuan->file_materi);
+            $pertemuan->update(['file_materi' => null]);
+        }
+
+        return back()->with('success', 'Materi berhasil dihapus!');
+    }
+
     private function updatePersentaseKehadiran($kelas_id)
     {
         $total_pertemuan = Pertemuan::where('kelas_id', $kelas_id)->count();

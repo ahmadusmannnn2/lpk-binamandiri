@@ -157,6 +157,8 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
     Route::post('/kelas/{kelas_id}/pertemuan', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'store'])->name('pertemuan.store');
     Route::get('/pertemuan/{id}', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'show'])->name('pertemuan.show');
     Route::put('/pertemuan/{id}/absensi', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'simpanAbsensi'])->name('pertemuan.absensi');
+    Route::put('/pertemuan/{id}/materi', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'updateMateri'])->name('pertemuan.update_materi');
+    Route::delete('/pertemuan/{id}/materi', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'destroyMateri'])->name('pertemuan.destroy_materi');
     Route::delete('/pertemuan/{id}', [\App\Http\Controllers\Instruktur\PertemuanController::class, 'destroy'])->name('pertemuan.destroy');
 });
 
