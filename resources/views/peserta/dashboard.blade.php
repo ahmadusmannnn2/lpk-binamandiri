@@ -239,16 +239,28 @@
                                                             <h5 class="font-black text-lg text-hitam mt-2">{{ $pertemuan->judul_pertemuan }}</h5>
                                                             
                                                             <div class="mt-4 flex flex-col sm:flex-row gap-3">
-                                                                @if($absen && $absen->status != 'alpa')
-                                                                    <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 flex items-center gap-3 w-full sm:w-1/2">
-                                                                        <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 text-green-600">
-                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                                @if($absen)
+                                                                    @if($absen->status == 'hadir')
+                                                                        <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 flex items-center gap-3 w-full sm:w-1/2">
+                                                                            <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 text-green-600">
+                                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p class="text-[10px] text-gray-500 font-bold uppercase">Status Presensi</p>
+                                                                                <p class="text-sm font-black text-hitam capitalize">Hadir</p>
+                                                                            </div>
                                                                         </div>
-                                                                        <div>
-                                                                            <p class="text-[10px] text-gray-500 font-bold uppercase">Status Presensi</p>
-                                                                            <p class="text-sm font-black text-hitam capitalize">{{ $absen->status }}</p>
+                                                                    @else
+                                                                        <div class="bg-gray-50 px-4 py-3 rounded-lg border border-red-100 flex items-center gap-3 w-full sm:w-1/2">
+                                                                            <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-red-100 text-red-600">
+                                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p class="text-[10px] text-gray-500 font-bold uppercase">Status Presensi</p>
+                                                                                <p class="text-sm font-black text-red-600 capitalize">Alpa</p>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
+                                                                    @endif
                                                                 @else
                                                                     <div class="bg-gray-50 px-4 py-3 rounded-lg border border-dashed border-gray-300 flex items-center gap-3 w-full sm:w-1/2">
                                                                         <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center shrink-0">
