@@ -67,11 +67,18 @@
                                                     {{ \Carbon\Carbon::parse($materi->tanggal)->translatedFormat('l, d F Y') }}
                                                 </span>
                                                 
-                                                @if($absen && $absen->status != 'alpa')
-                                                    <span class="flex items-center gap-1 px-2 py-1 rounded border font-bold uppercase tracking-wider text-[10px] shadow-sm bg-green-50 border-green-200 text-green-600">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                                        Hadir
-                                                    </span>
+                                                @if($absen)
+                                                    @if($absen->status == 'hadir')
+                                                        <span class="flex items-center gap-1 px-2 py-1 rounded border font-bold uppercase tracking-wider text-[10px] shadow-sm bg-green-50 border-green-200 text-green-600">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                            Hadir
+                                                        </span>
+                                                    @else
+                                                        <span class="flex items-center gap-1 px-2 py-1 rounded border font-bold uppercase tracking-wider text-[10px] shadow-sm bg-red-50 border-red-200 text-red-600">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                            Alpa
+                                                        </span>
+                                                    @endif
                                                 @else
                                                     <span class="flex items-center gap-1 px-2 py-1 rounded border border-gray-200 bg-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[10px] italic">
                                                         Belum Diabsen
