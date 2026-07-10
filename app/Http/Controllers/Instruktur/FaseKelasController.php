@@ -21,7 +21,7 @@ class FaseKelasController extends Controller
         $kelas = Kelas::findOrFail($kelas_id);
         
         // Keamanan ekstra: Pastikan hanya instruktur kelas ini yang bisa
-        if ($kelas->instruktur_id !== Auth::user()->instruktur->id) {
+        if ($kelas->instruktur_id != Auth::user()->instruktur->id) {
             abort(403, 'Anda tidak memiliki akses ke kelas ini.');
         }
 
@@ -40,7 +40,7 @@ class FaseKelasController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $fase = FaseKelas::findOrFail($id);
-        if ($fase->kelas->instruktur_id !== Auth::user()->instruktur->id) {
+        if ($fase->kelas->instruktur_id != Auth::user()->instruktur->id) {
             abort(403);
         }
 
@@ -54,7 +54,7 @@ class FaseKelasController extends Controller
     public function updateKriteria(Request $request, $id)
     {
         $fase = FaseKelas::findOrFail($id);
-        if ($fase->kelas->instruktur_id !== Auth::user()->instruktur->id) {
+        if ($fase->kelas->instruktur_id != Auth::user()->instruktur->id) {
             abort(403);
         }
 
@@ -81,7 +81,7 @@ class FaseKelasController extends Controller
     public function reorder(Request $request, $kelas_id)
     {
         $kelas = Kelas::findOrFail($kelas_id);
-        if ($kelas->instruktur_id !== Auth::user()->instruktur->id) {
+        if ($kelas->instruktur_id != Auth::user()->instruktur->id) {
             return response()->json(['error' => 'Akses ditolak'], 403);
         }
 
@@ -102,7 +102,7 @@ class FaseKelasController extends Controller
     public function update(Request $request, $id)
     {
         $fase = FaseKelas::findOrFail($id);
-        if ($fase->kelas->instruktur_id !== Auth::user()->instruktur->id) {
+        if ($fase->kelas->instruktur_id != Auth::user()->instruktur->id) {
             abort(403);
         }
 
@@ -122,7 +122,7 @@ class FaseKelasController extends Controller
     public function destroy($id)
     {
         $fase = FaseKelas::findOrFail($id);
-        if ($fase->kelas->instruktur_id !== Auth::user()->instruktur->id) {
+        if ($fase->kelas->instruktur_id != Auth::user()->instruktur->id) {
             abort(403);
         }
 
@@ -138,7 +138,7 @@ class FaseKelasController extends Controller
     public function simpanNilai(Request $request, $id)
     {
         $fase = FaseKelas::findOrFail($id);
-        if ($fase->kelas->instruktur_id !== Auth::user()->instruktur->id) {
+        if ($fase->kelas->instruktur_id != Auth::user()->instruktur->id) {
             abort(403, 'Akses Ditolak');
         }
 

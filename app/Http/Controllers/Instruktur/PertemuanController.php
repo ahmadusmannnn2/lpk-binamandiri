@@ -16,7 +16,7 @@ class PertemuanController extends Controller
     public function store(Request $request, $kelas_id)
     {
         $kelas = Kelas::findOrFail($kelas_id);
-        if ($kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+        if ($kelas->instruktur_id != \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
             abort(403, 'Anda tidak memiliki akses ke kelas ini.');
         }
         $request->validate([
@@ -65,7 +65,7 @@ class PertemuanController extends Controller
     public function show($id)
     {
         $pertemuan = Pertemuan::with('kelas.programPelatihan')->findOrFail($id);
-        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+        if ($pertemuan->kelas->instruktur_id != \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
             abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
         }
 
@@ -84,7 +84,7 @@ class PertemuanController extends Controller
         ]);
 
         $pertemuan = Pertemuan::findOrFail($id);
-        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+        if ($pertemuan->kelas->instruktur_id != \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
             abort(403, 'Anda tidak memiliki akses.');
         }
 
@@ -107,7 +107,7 @@ class PertemuanController extends Controller
     public function destroy($id)
     {
         $pertemuan = Pertemuan::findOrFail($id);
-        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+        if ($pertemuan->kelas->instruktur_id != \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
             abort(403, 'Anda tidak memiliki akses.');
         }
         $kelas_id = $pertemuan->kelas_id;
@@ -127,7 +127,7 @@ class PertemuanController extends Controller
     public function updateMateri(Request $request, $id)
     {
         $pertemuan = Pertemuan::findOrFail($id);
-        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+        if ($pertemuan->kelas->instruktur_id != \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
             abort(403, 'Anda tidak memiliki akses.');
         }
 
@@ -151,7 +151,7 @@ class PertemuanController extends Controller
     public function destroyMateri($id)
     {
         $pertemuan = Pertemuan::findOrFail($id);
-        if ($pertemuan->kelas->instruktur_id !== \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
+        if ($pertemuan->kelas->instruktur_id != \Illuminate\Support\Facades\Auth::user()->instruktur->id) {
             abort(403, 'Anda tidak memiliki akses.');
         }
 
