@@ -167,6 +167,7 @@ Route::middleware(['auth', 'verified'])->prefix('instruktur')->name('instruktur.
 // RUTE KHUSUS PESERTA
 // ==========================================
 Route::middleware(['auth', 'verified'])->prefix('peserta')->name('peserta.')->group(function () {
+    Route::get('/pembayaran/riwayat', [\App\Http\Controllers\Peserta\RiwayatPembayaranController::class, 'index'])->name('riwayat_pembayaran.index');
 
     Route::get('/dashboard', function () {
         $peserta = auth()->user()->peserta;

@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     @php
-        // Logika Favicon & Nama LPK Dinamis
-        $logoApp = \App\Models\Pengaturan::where('kunci', 'logo_navbar')->value('nilai');
-        $faviconUrl = $logoApp ? asset('storage/' . $logoApp) : asset('favicon.ico');
+        // Logika Favicon & Nama LPK Dinamis (Anti-Cache)
+        $pengaturanLogo = \App\Models\Pengaturan::where('kunci', 'logo_navbar')->first();
+        $logoApp = $pengaturanLogo ? $pengaturanLogo->nilai : null;
+        $faviconUrl = $logoApp ? asset('storage/' . $logoApp) . '?v=' . ($pengaturanLogo->updated_at ? $pengaturanLogo->updated_at->timestamp : '1') : asset('favicon.ico');
         
         $namaLpk1 = $pengaturan['nama_lpk_1'] ?? 'LPK';
         $namaLpk2 = $pengaturan['nama_lpk_2'] ?? 'BINA MANDIRI';
@@ -16,7 +17,9 @@
     @endphp
 
     <title>Beranda | {{ $appName }}</title>
-    <link rel="icon" href="{{ $faviconUrl }}" type="image/png">
+    <link rel="icon" href="{{ $faviconUrl }}">
+    <link rel="shortcut icon" href="{{ $faviconUrl }}">
+    <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,600,800,900&display=swap" rel="stylesheet" />

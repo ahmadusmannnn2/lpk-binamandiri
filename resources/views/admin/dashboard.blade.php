@@ -128,7 +128,7 @@
                                     </td>
                                     <td class="p-3 text-[11px] text-gray-600 font-bold">
                                         {{ \Carbon\Carbon::parse($item->tanggal_daftar)->translatedFormat('d M Y') }}
-                                        <div class="text-gray-400 font-normal">{{ \Carbon\Carbon::parse($item->tanggal_daftar)->format('H:i') }} WIB</div>
+                                        <div class="text-gray-400 font-normal">{{ \Carbon\Carbon::parse($item->created_at)->format('H:i') }} WIB</div>
                                     </td>
                                     
                                     <!-- Menampilkan 2 Status Sekaligus (Biodata & Tagihan) -->

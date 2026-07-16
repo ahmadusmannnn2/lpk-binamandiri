@@ -25,7 +25,7 @@
                         </div>
                         <div>
                             <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Tanggal Dibuat</p>
-                            <p class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($pendaftaran->tanggal_daftar)->format('d F Y, H:i') }} WIB</p>
+                            <p class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($pendaftaran->created_at)->format('d F Y, H:i') }} WIB</p>
                         </div>
                     </div>
 

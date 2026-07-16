@@ -6,9 +6,10 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         @php
-            // 1. Logika Favicon Dinamis
-            $logoApp = \App\Models\Pengaturan::where('kunci', 'logo_navbar')->value('nilai');
-            $faviconUrl = $logoApp ? asset('storage/' . $logoApp) : asset('favicon.ico');
+            // 1. Logika Favicon Dinamis (Anti-Cache Cerdas)
+            $pengaturanLogo = \App\Models\Pengaturan::where('kunci', 'logo_navbar')->first();
+            $logoApp = $pengaturanLogo ? $pengaturanLogo->nilai : null;
+            $faviconUrl = $logoApp ? asset('storage/' . $logoApp) . '?v=' . ($pengaturanLogo->updated_at ? $pengaturanLogo->updated_at->timestamp : '1') : asset('favicon.ico');
 
             // 2. Logika Nama LPK
             $namaLpk1 = \App\Models\Pengaturan::where('kunci', 'nama_lpk_1')->value('nilai') ?? 'LPK';
@@ -37,7 +38,9 @@
 
         <!-- TITTLE & FAVICON DINAMIS -->
         <title>{{ $pageTitle }} | {{ $appName }}</title>
-        <link rel="icon" href="{{ $faviconUrl }}" type="image/png">
+        <link rel="icon" href="{{ $faviconUrl }}">
+        <link rel="shortcut icon" href="{{ $faviconUrl }}">
+        <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

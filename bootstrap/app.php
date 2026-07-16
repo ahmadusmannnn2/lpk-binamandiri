@@ -17,5 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            return redirect()->route('login')->with('error', 'Sesi Anda telah berakhir (419). Silakan login kembali.');
+        });
     })->create();

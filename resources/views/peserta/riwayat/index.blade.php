@@ -38,7 +38,7 @@
                             <tr class="hover:bg-orange-50/50 transition">
                                 <td class="py-4 px-4 font-medium">
                                     <div class="text-hitam font-bold text-base">LPK-{{ $item->id }}</div>
-                                    <div class="text-xs text-gray-400 mt-1">{{ \Carbon\Carbon::parse($item->tanggal_daftar)->format('d M Y, H:i') }} WIB</div>
+                                    <div class="text-xs text-gray-400 mt-1">{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y, H:i') }} WIB</div>
                                 </td>
                                 
                                 <td class="py-4 px-4">
